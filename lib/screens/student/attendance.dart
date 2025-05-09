@@ -8,8 +8,8 @@ class StudentAttendanceScreen extends StatelessWidget {
 
   // Dummy attendance stats per subject
   final Map<String, Map<String, int>> attendance = {
-    'Matemáticas': { 'present': 20, 'absent': 2 },
-    'Lengua':       { 'present': 22, 'absent': 0 },
+    'Matematica': { 'present': 20, 'absent': 2 },
+    'Limba si Literatura Romana':       { 'present': 22, 'absent': 0 },
     'Ciencias':     { 'present': 19, 'absent': 3 },
   };
 
@@ -25,7 +25,7 @@ class StudentAttendanceScreen extends StatelessWidget {
     return Scaffold(
       drawer: SidebarDrawer(role: 'student', currentRoute: routeName),
       appBar: AppBar(
-        title: Text('Mis Ausencias'),
+        title: Text('Prezenta mea'),
         actions: [
           NotificationBell(
             count: newNotificationsCount,
@@ -39,9 +39,9 @@ class StudentAttendanceScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Total Ausencias:', style: Theme.of(context).textTheme.titleMedium),
-            Text('Presente: $totalPresent'),
-            Text('Ausente:  $totalAbsent'),
+            Text('Total Absente:', style: Theme.of(context).textTheme.titleMedium),
+            Text('Prezent: $totalPresent'),
+            Text('Absent:  $totalAbsent'),
             Divider(height: 32),
             Expanded(
               child: ListView(
@@ -53,7 +53,7 @@ class StudentAttendanceScreen extends StatelessWidget {
                     margin: EdgeInsets.symmetric(vertical: 6),
                     child: ListTile(
                       title: Text(subj),
-                      subtitle: Text('Presente: $p · Ausente: $a'),
+                      subtitle: Text('Prezent: $p · Absent: $a'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

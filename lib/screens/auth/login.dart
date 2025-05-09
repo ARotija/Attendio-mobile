@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 
 class LoginScreen extends StatelessWidget {
   static const routeName = '/login';
@@ -33,6 +33,107 @@ class LoginScreen extends StatelessWidget {
                 },
                 child: Text('Entrar'),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+*/
+import 'package:flutter/material.dart';
+import 'package:attendio_mobile/theme.dart';
+
+class LoginScreen extends StatelessWidget {
+  static const routeName = '/login';
+
+  const LoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.primarySwatch[400], // Fondo azul claro
+      body: Center(
+        child: Container(
+          width: 350,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'ATTENDIO',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Login',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 24),
+              TextField(
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'name@gmail.com',
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Parolă',
+                  hintText: '********',
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                height: 40,
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Aquí deberías poner el destino real tras login
+                    Navigator.pushReplacementNamed(context, '/tutor/home');
+                  },
+                  child: const Text('Autentificare'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  // Acción de "Olvidé contraseña"
+                },
+                child: const Text(
+                  'Ai uitat parola?',
+                  style: TextStyle(fontSize: 13),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/student/home');
+                },
+                child: const Text(
+                  'Ventana profesor',
+                  style: TextStyle(fontSize: 13, color: Colors.red),
+                ),
+              )
             ],
           ),
         ),

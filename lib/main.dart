@@ -3,16 +3,16 @@ import 'theme.dart';
 import 'routes.dart';
 
 void main() {
-  runApp(EduNetApp());
+  runApp(Attendio());
 }
 
-class EduNetApp extends StatelessWidget {
-  const EduNetApp({super.key});
+class Attendio extends StatelessWidget {
+  const Attendio({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EduNet',
+      title: 'Attendio',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       initialRoute: '/login',

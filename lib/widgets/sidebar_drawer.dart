@@ -73,23 +73,23 @@ class SidebarDrawer extends StatelessWidget {
           _NavItem('Home', Icons.home, '/teacher/home'),
           _NavItem('Notas', Icons.note, '/teacher/notes'),
           _NavItem('Asistencias', Icons.how_to_reg, '/teacher/attendance'),
-          _NavItem('Buscar', Icons.search, '/teacher/search'),
+          _NavItem('Cauta', Icons.search, '/teacher/search'),
           _NavItem('Perfil', Icons.settings, '/teacher/profile'),
         ];
       case 'student':
         return [
           _NavItem('Home', Icons.home, '/student/home'),
-          _NavItem('Notas', Icons.note, '/student/notes'),
-          _NavItem('Ausencias', Icons.how_to_reg, '/student/attendance'),
-          _NavItem('Notificaciones', Icons.notifications, '/student/notifications'),
+          _NavItem('Note', Icons.note, '/student/notes'),
+          _NavItem('Absente', Icons.how_to_reg, '/student/attendance'),
+          _NavItem('Notificatii', Icons.notifications, '/student/notifications'),
           _NavItem('Perfil', Icons.settings, '/student/profile'),
         ];
       case 'tutor':
         return [
           _NavItem('Home', Icons.home, '/tutor/home'),
-          _NavItem('Notas', Icons.note, '/tutor/notes'),
-          _NavItem('Ausencias', Icons.how_to_reg, '/tutor/attendance'),
-          _NavItem('Notificaciones', Icons.notifications, '/tutor/notifications'),
+          _NavItem('Note', Icons.note, '/tutor/notes'),
+          _NavItem('Absente', Icons.how_to_reg, '/tutor/attendance'),
+          _NavItem('Notificari', Icons.notifications, '/tutor/notifications'),
           _NavItem('Perfil', Icons.settings, '/tutor/profile'),
         ];
       default:
