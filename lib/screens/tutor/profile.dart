@@ -5,8 +5,8 @@ class TutorProfileScreen extends StatelessWidget {
   static const routeName = '/tutor/profile';
 
   final Map<String, String> profile = {
-    'Nombre': 'Laura García',
-    'Email': 'laura.garcia@colegio.edu',
+    'Nombre': 'Olivia Marinescu',
+    'Email': 'olivia.marinescu.com',
     'Rol': 'Tutor',
   };
 
@@ -14,7 +14,7 @@ class TutorProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: SidebarDrawer(role: 'tutor', currentRoute: routeName),
-      appBar: AppBar(title: Text('Mi Perfil')),
+      appBar: AppBar(title: Text('Setarile mele')),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -27,14 +27,14 @@ class TutorProfileScreen extends StatelessWidget {
             Divider(),
             ElevatedButton.icon(
               icon: Icon(Icons.group_add),
-              label: Text('Añadir Hijos'),
+              label: Text('Adăugați copii'),
               onPressed: () {
                 // TODO: navegar a pantalla de agregar hijos
               },
             ),
             ElevatedButton.icon(
               icon: Icon(Icons.lock),
-              label: Text('Cambiar contraseña'),
+              label: Text('Schimbaţi parola'),
               onPressed: () {
                 // TODO: navegar a pantalla de cambio de contraseña
               },

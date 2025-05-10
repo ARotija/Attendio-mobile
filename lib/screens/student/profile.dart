@@ -16,7 +16,7 @@ class StudentProfileScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: SidebarDrawer(role: 'student', currentRoute: routeName),
-      appBar: AppBar(title: Text('Mi Perfil')),
+      appBar: AppBar(title: Text('Setarile mele')),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(
@@ -29,7 +29,7 @@ class StudentProfileScreen extends StatelessWidget {
             Divider(),
             ElevatedButton.icon(
               icon: Icon(Icons.lock),
-              label: Text('Cambiar contraseña'),
+              label: Text('Schimba parola'),
               onPressed: () {
                 // TODO: navegar a pantalla de cambio de contraseña
               },

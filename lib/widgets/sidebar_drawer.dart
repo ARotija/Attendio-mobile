@@ -36,7 +36,12 @@ class SidebarDrawer extends StatelessWidget {
           ...items.map((item) {
             final isSelected = currentRoute == item.route;
             return ListTile(
-              leading: Icon(item.icon, color: isSelected ? Theme.of(context).colorScheme.secondary : null),
+              leading: Icon(
+                item.icon,
+                color: isSelected
+                    ? Theme.of(context).colorScheme.secondary
+                    : null,
+              ),
               title: Text(
                 item.label,
                 style: TextStyle(
@@ -44,6 +49,7 @@ class SidebarDrawer extends StatelessWidget {
                 ),
               ),
               selected: isSelected,
+              selectedTileColor: const Color(0xFFB3D1E8), // Fondo resaltado
               onTap: () {
                 if (!isSelected) {
                   Navigator.of(context).pop();
@@ -71,26 +77,26 @@ class SidebarDrawer extends StatelessWidget {
       case 'teacher':
         return [
           _NavItem('Home', Icons.home, '/teacher/home'),
-          _NavItem('Notas', Icons.note, '/teacher/notes'),
-          _NavItem('Asistencias', Icons.how_to_reg, '/teacher/attendance'),
-          _NavItem('Buscar', Icons.search, '/teacher/search'),
-          _NavItem('Perfil', Icons.settings, '/teacher/profile'),
+          _NavItem('Note', Icons.note, '/teacher/notes'),
+          _NavItem('Absențe', Icons.how_to_reg, '/teacher/attendance'),
+          _NavItem('Prezență automată', Icons.search, '/teacher/search'),
+          _NavItem('Setări', Icons.settings, '/teacher/profile'),
         ];
       case 'student':
         return [
           _NavItem('Home', Icons.home, '/student/home'),
-          _NavItem('Notas', Icons.note, '/student/notes'),
-          _NavItem('Ausencias', Icons.how_to_reg, '/student/attendance'),
-          _NavItem('Notificaciones', Icons.notifications, '/student/notifications'),
-          _NavItem('Perfil', Icons.settings, '/student/profile'),
+          _NavItem('Note', Icons.note, '/student/notes'),
+          _NavItem('Absențe', Icons.how_to_reg, '/student/attendance'),
+          _NavItem('Notificări', Icons.notifications, '/student/notifications'),
+          _NavItem('Setări', Icons.settings, '/student/profile'),
         ];
       case 'tutor':
         return [
           _NavItem('Home', Icons.home, '/tutor/home'),
-          _NavItem('Notas', Icons.note, '/tutor/notes'),
-          _NavItem('Ausencias', Icons.how_to_reg, '/tutor/attendance'),
-          _NavItem('Notificaciones', Icons.notifications, '/tutor/notifications'),
-          _NavItem('Perfil', Icons.settings, '/tutor/profile'),
+          _NavItem('Note', Icons.note, '/tutor/notes'),
+          _NavItem('Absențe', Icons.how_to_reg, '/tutor/attendance'),
+          _NavItem('Notificări', Icons.notifications, '/tutor/notifications'),
+          _NavItem('Setări', Icons.settings, '/tutor/profile'),
         ];
       default:
         return [];

@@ -7,22 +7,22 @@ class TutorNotesScreen extends StatefulWidget {
   static const routeName = '/tutor/notes';
 
   // Dummy children list
-  final List<String> children = ['María López', 'Carlos Díaz'];
+  final List<String> children = ['Bocai Robert', 'Ana Maria'];
 
   // Dummy notes per child per subject
   final Map<String, Map<String, List<Map<String, String>>>> notes = {
-    'María López': {
-      'Matemáticas': [
+    'Bocai Robert': {
+      'Matematica': [
         {'value': '7', 'date': '02/05/2025'},
         {'value': '8', 'date': '15/04/2025'},
       ],
-      'Lengua': [],
+      'Limba si Literatura Romana': [],
     },
-    'Carlos Díaz': {
-      'Historia': [
+    'Ana Maria': {
+      'Istorie': [
         {'value': '9', 'date': '01/05/2025'},
       ],
-      'Ciencias': [],
+      'Biologie': [],
     },
   };
 

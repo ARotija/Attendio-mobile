@@ -14,29 +14,29 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
   final periods = [1,2,3,4,5,6];
 
   // Dummy: quién está presente y ausente
-  final present = ['Juan Pérez','Ana García'];
-  final absent  = ['Luis Martínez'];
+  final present = ['Bocai Robert','Popescu Maria'];
+  final absent  = ['Vasile Elena','Popescu Andrei'];
 
   @override
   Widget build(BuildContext ctx) {
     return Scaffold(
       drawer: SidebarDrawer(role: 'teacher', currentRoute: TeacherAttendanceScreen.routeName),
-      appBar: AppBar(title: Text('Asistencias')),
+      appBar: AppBar(title: Text('Prezența elevilor')),
       body: Padding(
         padding: EdgeInsets.all(16),
         child: Column(children: [
           Row(children: [
             Expanded(child: DropdownButtonFormField(
-              decoration: InputDecoration(labelText: 'Clase'),
+              decoration: InputDecoration(labelText: 'Clasa'),
               value: selectedClass,
               items: classes.map((c)=>DropdownMenuItem(value:c,child:Text(c))).toList(),
               onChanged:(v)=> setState(()=>selectedClass=v!),
             )),
             SizedBox(width:16),
             Expanded(child: DropdownButtonFormField<int>(
-              decoration: InputDecoration(labelText: 'Período'),
+              decoration: InputDecoration(labelText: 'Perioada'),
               value: selectedPeriod,
-              items: periods.map((p)=>DropdownMenuItem(value:p,child:Text('Hora $p'))).toList(),
+              items: periods.map((p)=>DropdownMenuItem(value:p,child:Text('Ora $p'))).toList(),
               onChanged:(v)=> setState(()=>selectedPeriod=v!),
             )),
           ]),
@@ -44,13 +44,13 @@ class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
           Expanded(
             child: ListView(
               children: [
-                Text('Presentes', style: Theme.of(ctx).textTheme.titleMedium),
+                Text('Prezenți', style: Theme.of(ctx).textTheme.titleMedium),
                 ...present.map((s)=>ListTile(
                   leading: Icon(Icons.check, color: Colors.green),
                   title: Text(s),
                 )),
                 Divider(),
-                Text('Ausentes', style: Theme.of(ctx).textTheme.titleMedium),
+                Text('Absenți', style: Theme.of(ctx).textTheme.titleMedium),
                 ...absent.map((s)=>ListTile(
                   leading: Icon(Icons.close, color: Colors.red),
                   title: Text(s),

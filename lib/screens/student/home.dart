@@ -9,15 +9,15 @@ class StudentHomeScreen extends StatelessWidget {
   // Dummy schedule for the logged‑in student
   final List<Map<String, String>> schedule = [
     {
-      'day': 'Lunes',
+      'day': 'Luni',
       'time': '08:00–09:00',
-      'subject': 'Matemáticas',
+      'subject': 'Matematica',
       'room': '101'
     },
     {
-      'day': 'Martes',
+      'day': 'Marti',
       'time': '09:00–10:00',
-      'subject': 'Historia',
+      'subject': 'Limba si Literatura Romana',
       'room': '102'
     },
   ];
@@ -30,7 +30,7 @@ class StudentHomeScreen extends StatelessWidget {
     return Scaffold(
       drawer: SidebarDrawer(role: 'student', currentRoute: routeName),
       appBar: AppBar(
-        title: Text('Mi Horario'),
+        title: Text('Horarul meu'),
         actions: [
           NotificationBell(
             count: newNotificationsCount,

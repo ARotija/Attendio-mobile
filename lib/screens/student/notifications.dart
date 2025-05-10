@@ -8,15 +8,15 @@ class StudentNotificationsScreen extends StatelessWidget {
   final List<Map<String, String>> notifications = [
     {
       'icon': 'close',
-      'text': 'Has recibido una ausencia en Matemáticas el 02/05/2025 10:00'
+      'text': 'Ai primit o absență la Matematică pe 05/02/2025 la ora 10:00'
     },
     {
       'icon': 'check',
-      'text': 'Tu ausencia en Historia el 01/05/2025 fue motivada'
+      'text': 'Absența ta din Istorie pe 01.05.2025 a fost motivată'
     },
     {
       'icon': 'star',
-      'text': 'Has recibido nota 9 en Ciencias el 15/04/2025'
+      'text': 'Ai primit nota 9 la Științe pe 15.04.2025'
     },
   ];
 
@@ -37,7 +37,7 @@ class StudentNotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: SidebarDrawer(role: 'student', currentRoute: routeName),
-      appBar: AppBar(title: Text('Notificaciones')),
+      appBar: AppBar(title: Text('Notificări')),
       body: ListView.separated(
         padding: EdgeInsets.all(16),
         itemCount: notifications.length,

@@ -8,11 +8,11 @@ class StudentNotesScreen extends StatelessWidget {
 
   // Dummy notes per subject
   final Map<String, List<Map<String, String>>> notes = {
-    'Matemáticas': [
+    'Matematica': [
       {'value': '8', 'date': '01/05/2025'},
       {'value': '9', 'date': '15/04/2025'},
     ],
-    'Lengua': [],
+    'Limba si Literatura Romana': [],
     'Ciencias': [
       {'value': '7', 'date': '20/03/2025'},
     ],
