@@ -127,7 +127,7 @@ class LoginScreen extends StatelessWidget {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/student/home');
+                  Navigator.pushReplacementNamed(context, '/teacher/home');
                 },
                 child: const Text(
                   'Ventana profesor',

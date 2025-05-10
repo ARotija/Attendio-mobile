@@ -7,14 +7,14 @@ class TutorNotificationsScreen extends StatelessWidget {
   // Dummy notifications
   final List<Map<String, String>> notifications = [
     {
-      'child': 'María López',
+      'child': 'Ana María',
       'icon': 'close',
-      'text': 'Tu hija recibió una ausencia en Matemáticas el 02/05/2025 10:00'
+      'text': 'Copilul dumneavoastră a fost absent la ora de Matematică pe 05/02/2025, ora 10:10.'
     },
     {
-      'child': 'Carlos Díaz',
+      'child': 'Bocai Robert',
       'icon': 'check',
-      'text': 'La ausencia de tu hijo en Historia el 01/05/2025 fue motivada'
+      'text': 'Absența copilului dumneavoastră de la Istorie pe 05.01.2025 a fost motivată'
     },
   ];
 
@@ -30,7 +30,7 @@ class TutorNotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: SidebarDrawer(role: 'tutor', currentRoute: routeName),
-      appBar: AppBar(title: Text('Notificaciones Tutor')),
+      appBar: AppBar(title: Text('Notificări pentru tutori')),
       body: ListView.separated(
         padding: EdgeInsets.all(16),
         itemCount: notifications.length,

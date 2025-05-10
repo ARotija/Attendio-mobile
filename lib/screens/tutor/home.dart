@@ -9,17 +9,17 @@ class TutorHomeScreen extends StatelessWidget {
   // Dummy schedule for tutor’s children
   final List<Map<String, String>> schedule = [
     {
-      'child': 'María López',
-      'day': 'Lunes',
+      'child': 'Bocai Robert',
+      'day': 'Luni',
       'time': '08:00–09:00',
-      'subject': 'Matemáticas',
+      'subject': 'Matematica',
       'room': '101'
     },
     {
-      'child': 'Carlos Díaz',
-      'day': 'Martes',
+      'child': 'Ana Maria',
+      'day': 'Marți',
       'time': '09:00–10:00',
-      'subject': 'Historia',
+      'subject': 'Limba si Literatura Romana',
       'room': '102'
     },
   ];
@@ -31,7 +31,7 @@ class TutorHomeScreen extends StatelessWidget {
     return Scaffold(
       drawer: SidebarDrawer(role: 'tutor', currentRoute: routeName),
       appBar: AppBar(
-        title: Text('Horario de Hijos'),
+        title: Text('Horarul copiilor'),
         actions: [
           NotificationBell(
             count: newNotificationsCount,
@@ -48,7 +48,7 @@ class TutorHomeScreen extends StatelessWidget {
           return ListTile(
             leading: Icon(Icons.schedule),
             title: Text('${e['child']}  •  ${e['day']} ${e['time']}'),
-            subtitle: Text('${e['subject']} · Aula ${e['room']}'),
+            subtitle: Text('${e['subject']} · Sala ${e['room']}'),
           );
         },
       ),

@@ -11,17 +11,17 @@ class TutorAttendanceScreen extends StatefulWidget {
 }
 
 class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
-  final List<String> children = ['María López', 'Carlos Díaz'];
+  final List<String> children = ['Bocai Robert', 'Ana Maria'];
 
   // Dummy attendance stats per child per subject
   final Map<String, Map<String, Map<String, int>>> attendance = {
-    'María López': {
-      'Matemáticas': {'present': 18, 'absent': 4},
-      'Lengua':       {'present': 20, 'absent': 2},
+    'Bocai Robert': {
+      'Matematica': {'present': 18, 'absent': 4},
+      'Limba si Literatura Romana':       {'present': 20, 'absent': 2},
     },
-    'Carlos Díaz': {
-      'Historia': {'present': 19, 'absent': 3},
-      'Ciencias': {'present': 21, 'absent': 1},
+    'Ana Maria': {
+      'Istorie': {'present': 19, 'absent': 3},
+      'Biologie': {'present': 21, 'absent': 1},
     },
   };
 
@@ -36,7 +36,7 @@ class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
     return Scaffold(
       drawer: SidebarDrawer(role: 'tutor', currentRoute: TutorAttendanceScreen.routeName),
       appBar: AppBar(
-        title: Text('Ausencias de $currentChild'),
+        title: Text('Absențe $currentChild'),
         actions: [
           NotificationBell(
             count: newNotificationsCount,
@@ -74,7 +74,7 @@ class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
                   margin: EdgeInsets.symmetric(vertical: 6),
                   child: ListTile(
                     title: Text(subj),
-                    subtitle: Text('Presente: $p · Ausente: $a'),
+                    subtitle: Text('Prezențe: $p · Absențe: $a'),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [

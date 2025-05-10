@@ -18,8 +18,8 @@ class _TeacherSearchScreenState extends State<TeacherSearchScreen> {
   void _performSearch() {
     setState(() {
       searchResults = [
-        { 'student': 'Juan Pérez', 'subject': 'Historia', 'status': 'Ausente' },
-        { 'student': 'Ana García', 'subject': 'Ciencias', 'status': 'Presente' },
+        { 'student': 'Bocai Robert', 'subject': 'Istorie', 'status': 'Absent' },
+        { 'student': 'Ana Mari', 'subject': 'Biologie', 'status': 'Prezent' },
       ];
     });
   }
@@ -28,7 +28,7 @@ class _TeacherSearchScreenState extends State<TeacherSearchScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: SidebarDrawer(role: 'teacher', currentRoute: TeacherSearchScreen.routeName),
-      appBar: AppBar(title: Text('Buscar')),
+      appBar: AppBar(title: Text('Cautare')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(children: [
@@ -38,14 +38,14 @@ class _TeacherSearchScreenState extends State<TeacherSearchScreen> {
                 .map((c) => DropdownMenuItem(value: c, child: Text(c)))
                 .toList(),
             onChanged: (v) => setState(() => selectedClass = v!),
-            decoration: InputDecoration(labelText: 'Seleccionar clase'),
+            decoration: InputDecoration(labelText: 'Selecteaza clasa'),
           ),
           SizedBox(height: 16),
           Row(children: [
             Expanded(
               child: TextField(
                 controller: _searchController,
-                decoration: InputDecoration(labelText: 'Buscar estudiante'),
+                decoration: InputDecoration(labelText: 'Cautare elevi'),
               ),
             ),
             IconButton(

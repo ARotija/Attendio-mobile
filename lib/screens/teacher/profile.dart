@@ -5,17 +5,17 @@ class TeacherProfileScreen extends StatelessWidget {
   static const routeName = '/teacher/profile';
 
   final Map<String, String> teacherData = {
-    'Nombre': 'Carlos Mendoza',
-    'Email': 'carlos.mendoza@colegio.edu',
+    'Nume': 'Dinca Carlos',
+    'Email': 'carlos.dinca@gmail.com',
     'Rol': 'Profesor',
-    'Clase principal': '10B',
+    'Clasa principală': '10B',
   };
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: SidebarDrawer(role: 'teacher', currentRoute: TeacherProfileScreen.routeName),
-      appBar: AppBar(title: Text('Perfil')),
+      appBar: AppBar(title: Text('Setarile mele')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -31,7 +31,7 @@ class TeacherProfileScreen extends StatelessWidget {
                 // Aquí podrías abrir un formulario o pantalla para cambiar contraseña
               },
               icon: Icon(Icons.lock),
-              label: Text('Cambiar contraseña'),
+              label: Text('Schimba parola'),
             ),
           ],
         ),

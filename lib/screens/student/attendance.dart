@@ -10,7 +10,7 @@ class StudentAttendanceScreen extends StatelessWidget {
   final Map<String, Map<String, int>> attendance = {
     'Matematica': { 'present': 20, 'absent': 2 },
     'Limba si Literatura Romana':       { 'present': 22, 'absent': 0 },
-    'Ciencias':     { 'present': 19, 'absent': 3 },
+    'Biologie':     { 'present': 19, 'absent': 3 },
   };
 
   int get totalPresent =>

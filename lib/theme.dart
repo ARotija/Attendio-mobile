@@ -18,7 +18,7 @@ class AppColors {
   ); // Primary color: rgb(63, 81, 181)
   static const Color accent = Colors.amber;
   static const Color background = Color(0xFFF5F5F5);
-  static const Color sidebar = Color(0xFF1F4E8C);
+  static const Color sidebar =Color(0xFF4E81C1);
 }
 
 final ThemeData lightTheme = ThemeData(
@@ -26,7 +26,7 @@ final ThemeData lightTheme = ThemeData(
   primarySwatch: AppColors.primarySwatch,
   colorScheme: ColorScheme.light(
     primary: AppColors.primarySwatch,
-    secondary: const Color.fromARGB(255, 28, 255, 7),
+    secondary: const Color.fromARGB(255, 141, 46, 250),
     surface: AppColors.background,
   ),
   scaffoldBackgroundColor: AppColors.background,
