@@ -1,58 +1,44 @@
-/*import 'package:flutter/material.dart';
-
-class LoginScreen extends StatelessWidget {
-  static const routeName = '/login';
-
-  const LoginScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      // No utilizamos drawer aquí porque aún no estamos autenticados
-      appBar: AppBar(title: Text('Login (fake)')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Inputs falsos (no hacen nada)
-              TextField(
-                decoration: InputDecoration(labelText: 'Email'),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-              ),
-              SizedBox(height: 32),
-              ElevatedButton(
-                onPressed: () {
-                  // Simula un login exitoso redirigiendo a la Home de Tutor
-                  Navigator.pushReplacementNamed(context, '/tutor/home');
-                },
-                child: Text('Entrar'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-*/
 import 'package:flutter/material.dart';
 import 'package:attendio_mobile/theme.dart';
+import 'package:attendio_mobile/services/auth_service.dart'; // <- Importante
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
 
   const LoginScreen({super.key});
 
   @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  bool isLoading = false;
+
+  Future<void> handleLogin() async {
+    setState(() => isLoading = true);
+
+    final success = await AuthService.login(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
+
+    setState(() => isLoading = false);
+
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/tutor/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Email o contraseña incorrectos')),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primarySwatch[400], // Fondo azul claro
+      backgroundColor: AppColors.primarySwatch[400],
       body: Center(
         child: Container(
           width: 350,
@@ -71,33 +57,27 @@ class LoginScreen extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'ATTENDIO',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 24,
-                  letterSpacing: 1.5,
-                ),
-              ),
+              const Text('ATTENDIO',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                      letterSpacing: 1.5)),
               const SizedBox(height: 8),
-              const Text(
-                'Login',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
-              ),
+              const Text('Login',
+                  style: TextStyle(fontSize: 16, color: Colors.black54)),
               const SizedBox(height: 24),
               TextField(
-                decoration: InputDecoration(
+                controller: emailController,
+                decoration: const InputDecoration(
                   labelText: 'Email',
                   hintText: 'name@gmail.com',
                 ),
               ),
               const SizedBox(height: 16),
               TextField(
+                controller: passwordController,
                 obscureText: true,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Parolă',
                   hintText: '********',
                 ),
@@ -107,18 +87,16 @@ class LoginScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 40,
                 child: ElevatedButton(
-                  onPressed: () {
-                    // Aquí deberías poner el destino real tras login
-                    Navigator.pushReplacementNamed(context, '/tutor/home');
-                  },
-                  child: const Text('Autentificare'),
+                  onPressed: isLoading ? null : handleLogin,
+                  child: isLoading
+                      ? const CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                      : const Text('Autentificare'),
                 ),
               ),
               const SizedBox(height: 16),
               TextButton(
-                onPressed: () {
-                  // Acción de "Olvidé contraseña"
-                },
+                onPressed: () {},
                 child: const Text(
                   'Ai uitat parola?',
                   style: TextStyle(fontSize: 13),

@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // <-- Importa dotenv
 import 'theme.dart';
 import 'routes.dart';
 
-void main() {
-  runApp(Attendio());
+Future<void> main() async {
+  // Cargar variables de entorno desde el archivo .env
+  await dotenv.load(fileName: ".env");
+
+  runApp(const Attendio());
 }
 
 class Attendio extends StatelessWidget {
