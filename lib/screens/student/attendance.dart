@@ -1,79 +1,168 @@
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
-import '../../widgets/notification_bell.dart';
+import '../../widgets/scaffolds/student_scaffold.dart';
 import 'notifications.dart';
 
 class StudentAttendanceScreen extends StatelessWidget {
   static const routeName = '/student/attendance';
 
-  // Dummy attendance stats per subject
-  final Map<String, Map<String, int>> attendance = {
-    'Matematica': { 'present': 20, 'absent': 2 },
-    'Limba si Literatura Romana':       { 'present': 22, 'absent': 0 },
-    'Biologie':     { 'present': 19, 'absent': 3 },
+  // Datos de ejemplo: ausencias por materia
+  final Map<String, List<Map<String, dynamic>>> absenceData = {
+    'Matematică': [
+      {'date': '2023-05-10', 'motivated': true},
+      {'date': '2023-05-17', 'motivated': false},
+    ],
+    'Limba Română': [], // Sin ausencias
+    'Fizică': [
+      {'date': '2023-04-15', 'motivated': false},
+      {'date': '2023-04-22', 'motivated': false},
+      {'date': '2023-05-05', 'motivated': true},
+    ],
+    'Informatică': [
+      {'date': '2023-03-10', 'motivated': true},
+    ],
   };
 
-  int get totalPresent =>
-      attendance.values.map((e) => e['present']!).reduce((a, b) => a + b);
-  int get totalAbsent =>
-      attendance.values.map((e) => e['absent']!).reduce((a, b) => a + b);
+  // Calcular totales
+  int get totalMotivated => absenceData.values
+      .expand((absences) => absences)
+      .where((a) => a['motivated'] == true)
+      .length;
 
-  final int newNotificationsCount = 1;
+  int get totalUnmotivated => absenceData.values
+      .expand((absences) => absences)
+      .where((a) => a['motivated'] == false)
+      .length;
+
+  final int notificationCount = 1;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'student', currentRoute: routeName),
-      appBar: AppBar(
-        title: Text('Prezenta mea'),
-        actions: [
-          NotificationBell(
-            count: newNotificationsCount,
-            onTap: () =>
-                Navigator.of(context).pushNamed(StudentNotificationsScreen.routeName),
+    return StudentScaffold(
+      currentIndex: 2,
+      notificationCount: notificationCount,
+      onNotificationTap: () => Navigator.pushNamed(context, StudentNotificationsScreen.routeName),
+      body: Column(
+        children: [
+          // Resumen de ausencias
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Card(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    Text(
+                      'Total absențe',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildAbsenceCounter('Motivate', totalMotivated, Colors.green),
+                        _buildAbsenceCounter('Nemotivate', totalUnmotivated, Colors.red),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          
+          // Lista de ausencias por materia
+          Expanded(
+            child: ListView(
+              children: absenceData.entries.map((subject) {
+                final subjectName = subject.key;
+                final absences = subject.value;
+                
+                return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          subjectName,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 8),
+                        
+                        if (absences.isEmpty)
+                          Text(
+                            'Fără absențe',
+                            style: TextStyle(color: Colors.grey),
+                          )
+                        else
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: absences.map((absence) {
+                              return Chip(
+                                label: Text(
+                                  absence['date'],
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                backgroundColor: absence['motivated'] 
+                                    ? Colors.green 
+                                    : Colors.red,
+                                shape: StadiumBorder(
+                                  side: BorderSide(
+                                    color: absence['motivated']
+                                        ? Colors.green.shade800
+                                        : Colors.red.shade800,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Total Absente:', style: Theme.of(context).textTheme.titleMedium),
-            Text('Prezent: $totalPresent'),
-            Text('Absent:  $totalAbsent'),
-            Divider(height: 32),
-            Expanded(
-              child: ListView(
-                children: attendance.entries.map((e) {
-                  final subj = e.key;
-                  final p = e.value['present']!;
-                  final a = e.value['absent']!;
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      title: Text(subj),
-                      subtitle: Text('Prezent: $p · Absent: $a'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check, color: Colors.green),
-                          SizedBox(width: 4),
-                          Text('$p'),
-                          SizedBox(width: 16),
-                          Icon(Icons.close, color: Colors.red),
-                          SizedBox(width: 4),
-                          Text('$a'),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
+    );
+  }
+
+  Widget _buildAbsenceCounter(String label, int count, Color color) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 14),
         ),
-      ),
+        SizedBox(height: 4),
+        Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.2),
+            shape: BoxShape.circle,
+            border: Border.all(color: color),
+          ),
+          child: Text(
+            count.toString(),
+            style: TextStyle(
+              color: color,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

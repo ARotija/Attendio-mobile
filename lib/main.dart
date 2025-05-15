@@ -7,11 +7,11 @@ Future<void> main() async {
   // Cargar variables de entorno desde el archivo .env
   await dotenv.load(fileName: ".env");
 
-  runApp(const Attendio());
+  runApp(const MyApp()); // Inicia la app después de cargar el archivo .env
 }
 
-class Attendio extends StatelessWidget {
-  const Attendio({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +19,8 @@ class Attendio extends StatelessWidget {
       title: 'Attendio',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
-      initialRoute: '/login',
-      routes: appRoutes,
+      initialRoute: '/login', // La ruta inicial debe ser la de login
+      routes: appRoutes, // Las rutas de tu aplicación
     );
   }
 }

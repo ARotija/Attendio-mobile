@@ -1,110 +1,95 @@
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
-import '../../widgets/notification_bell.dart';
+import '../../widgets/scaffolds/tutor_scaffold.dart';
 import 'notifications.dart';
 
 class TutorNotesScreen extends StatefulWidget {
   static const routeName = '/tutor/notes';
-
-  // Dummy children list
-  final List<String> children = ['Bocai Robert', 'Ana Maria'];
-
-  // Dummy notes per child per subject
-  final Map<String, Map<String, List<Map<String, String>>>> notes = {
-    'Bocai Robert': {
-      'Matematica': [
-        {'value': '7', 'date': '02/05/2025'},
-        {'value': '8', 'date': '15/04/2025'},
-      ],
-      'Limba si Literatura Romana': [],
-    },
-    'Ana Maria': {
-      'Istorie': [
-        {'value': '9', 'date': '01/05/2025'},
-      ],
-      'Biologie': [],
-    },
-  };
-
-  final int newNotificationsCount = 1;
 
   @override
   _TutorNotesScreenState createState() => _TutorNotesScreenState();
 }
 
 class _TutorNotesScreenState extends State<TutorNotesScreen> {
+  final List<String> children = ['Bocai Robert', 'Ana Maria'];
   int selectedChildIndex = 0;
+
+  final Map<String, Map<String, List<Map<String, dynamic>>>> notesData = {
+    'Bocai Robert': {
+      'Matematica': [
+        {'grade': 7, 'date': '02/05/2025', 'type': 'Test'},
+        {'grade': 8, 'date': '15/04/2025', 'type': 'Tema'},
+      ],
+      'Limba Română': [],
+    },
+    'Ana Maria': {
+      'Istorie': [
+        {'grade': 9, 'date': '01/05/2025', 'type': 'Proiect'},
+      ],
+      'Biologie': [],
+    },
+  };
+
+  final int notificationCount = 1;
+
+  double _calculateAverage(List<Map<String, dynamic>> grades) {
+    if (grades.isEmpty) return 0;
+    return grades.map((g) => g['grade'] as int).reduce((a, b) => a + b) / grades.length;
+  }
 
   @override
   Widget build(BuildContext context) {
-    String currentChild = widget.children[selectedChildIndex];
-    final childNotes = widget.notes[currentChild]!;
+    final currentChild = children[selectedChildIndex];
+    final childNotes = notesData[currentChild]!;
 
-    double average(List<Map<String, String>> list) {
-      if (list.isEmpty) return 0.0;
-      return list.map((e) => double.parse(e['value']!)).reduce((a, b) => a + b) / list.length;
-    }
-
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'tutor', currentRoute: TutorNotesScreen.routeName),
-      appBar: AppBar(
-        title: Text('Notas de $currentChild'),
-        actions: [
-          NotificationBell(
-            count: widget.newNotificationsCount,
-            onTap: () => Navigator.of(context).pushNamed(TutorNotificationsScreen.routeName),
-          ),
-        ],
-      ),
+    return TutorScaffold(
+      currentIndex: 1,
+      notificationCount: notificationCount,
+      onNotificationTap: () => Navigator.pushNamed(context, TutorNotificationsScreen.routeName),
       body: Column(
         children: [
-          // Selector de hijo
           Padding(
-            padding: EdgeInsets.all(16),
-            child: DropdownButton<String>(
+            padding: const EdgeInsets.all(16.0),
+            child: DropdownButtonFormField<String>(
               value: currentChild,
-              items: widget.children
-                  .map((name) => DropdownMenuItem(value: name, child: Text(name)))
-                  .toList(),
-              onChanged: (val) {
-                if (val != null) {
+              items: children.map((name) => 
+                DropdownMenuItem(value: name, child: Text(name))
+              ).toList(),
+              onChanged: (value) {
+                if (value != null) {
                   setState(() {
-                    selectedChildIndex = widget.children.indexOf(val);
+                    selectedChildIndex = children.indexOf(value);
                   });
                 }
               },
+              decoration: InputDecoration(
+                labelText: 'Selectați copilul',
+                border: OutlineInputBorder(),
+              ),
             ),
           ),
           Expanded(
             child: ListView(
               padding: EdgeInsets.all(16),
-              children: childNotes.entries.map((entry) {
-                final subject = entry.key;
-                final list = entry.value;
-                final avg = average(list);
+              children: childNotes.entries.map((subjectEntry) {
+                final subject = subjectEntry.key;
+                final notes = subjectEntry.value;
+                final average = _calculateAverage(notes);
+                
                 return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
+                  margin: EdgeInsets.only(bottom: 16),
+                  child: ExpansionTile(
                     title: Text(subject),
-                    subtitle: list.isEmpty
-                        ? Text('Sin notas')
-                        : Wrap(
-                            spacing: 6,
-                            children: list
-                                .map((n) => Chip(label: Text('${n['value']} (${n['date']})')))
-                                .toList(),
-                          ),
-                    trailing: Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: avg > 0 ? Theme.of(context).colorScheme.secondary : Colors.grey,
-                        borderRadius: BorderRadius.circular(4),
+                    subtitle: notes.isEmpty 
+                        ? Text('Nu există note')
+                        : Text('Medie: ${average.toStringAsFixed(2)}'),
+                    children: notes.map((note) => ListTile(
+                      leading: CircleAvatar(
+                        child: Text(note['grade'].toString()),
+                        backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
                       ),
-                      child: Text(
-                        avg > 0 ? avg.toStringAsFixed(1) : '-',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
+                      title: Text(note['type']),
+                      subtitle: Text(note['date']),
+                    )).toList(),
                   ),
                 );
               }).toList(),

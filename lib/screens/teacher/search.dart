@@ -1,73 +1,95 @@
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
+import '../../widgets/scaffolds/teacher_scaffold.dart';
 
-class TeacherSearchScreen extends StatefulWidget {
+class TeacherSearchScreen extends StatelessWidget {
   static const routeName = '/teacher/search';
 
   @override
-  _TeacherSearchScreenState createState() => _TeacherSearchScreenState();
-}
-
-class _TeacherSearchScreenState extends State<TeacherSearchScreen> {
-  final _searchController = TextEditingController();
-  String selectedClass = '9A';
-  final List<String> classes = ['9A', '10B', '11C'];
-
-  List<Map<String, String>> searchResults = [];
-
-  void _performSearch() {
-    setState(() {
-      searchResults = [
-        { 'student': 'Bocai Robert', 'subject': 'Istorie', 'status': 'Absent' },
-        { 'student': 'Ana Mari', 'subject': 'Biologie', 'status': 'Prezent' },
-      ];
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'teacher', currentRoute: TeacherSearchScreen.routeName),
-      appBar: AppBar(title: Text('Cautare')),
+    return TeacherScaffold(
+      currentIndex: 3,
+      title: 'Căutare',
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(children: [
-          DropdownButtonFormField<String>(
-            value: selectedClass,
-            items: classes
-                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                .toList(),
-            onChanged: (v) => setState(() => selectedClass = v!),
-            decoration: InputDecoration(labelText: 'Selecteaza clasa'),
-          ),
-          SizedBox(height: 16),
-          Row(children: [
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(labelText: 'Cautare elevi'),
+        child: Column(
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                hintText: 'Caută elev, clasă sau materie...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
               ),
             ),
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: _performSearch,
+            SizedBox(height: 20),
+            Expanded(
+              child: GridView.count(
+                crossAxisCount: 2,
+                childAspectRatio: 1.5,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                children: [
+                  _buildSearchOption(
+                    context,
+                    icon: Icons.people,
+                    label: 'Elevi',
+                    color: Colors.blue,
+                  ),
+                  _buildSearchOption(
+                    context,
+                    icon: Icons.school,
+                    label: 'Clase',
+                    color: Colors.green,
+                  ),
+                  _buildSearchOption(
+                    context,
+                    icon: Icons.book,
+                    label: 'Materii',
+                    color: Colors.orange,
+                  ),
+                  _buildSearchOption(
+                    context,
+                    icon: Icons.calendar_today,
+                    label: 'Orar',
+                    color: Colors.purple,
+                  ),
+                ],
+              ),
             ),
-          ]),
-          SizedBox(height: 24),
-          Expanded(
-            child: ListView.builder(
-              itemCount: searchResults.length,
-              itemBuilder: (_, i) {
-                final result = searchResults[i];
-                return ListTile(
-                  leading: Icon(Icons.person),
-                  title: Text(result['student']!),
-                  subtitle: Text('${result['subject']} · ${result['status']}'),
-                );
-              },
-            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSearchOption(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    return Card(
+      elevation: 2,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(4),
+        onTap: () {
+          // Acción al seleccionar esta opción de búsqueda
+        },
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 40, color: color),
+              SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
-        ]),
+        ),
       ),
     );
   }

@@ -1,52 +1,102 @@
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
+import '../../widgets/scaffolds/student_scaffold.dart'; // se puede borrar
 
 class StudentNotificationsScreen extends StatelessWidget {
   static const routeName = '/student/notifications';
 
-  // Dummy notifications list
-  final List<Map<String, String>> notifications = [
+  final List<Map<String, dynamic>> notifications = [
     {
-      'icon': 'close',
-      'text': 'Ai primit o absență la Matematică pe 05/02/2025 la ora 10:00'
+      'type': 'grade',
+      'title': 'Ai primit o notă nouă',
+      'message': '9 la Matematică - Test semestrial',
+      'time': 'Acum 2 ore',
+      'read': false,
     },
     {
-      'icon': 'check',
-      'text': 'Absența ta din Istorie pe 01.05.2025 a fost motivată'
+      'type': 'attendance',
+      'title': 'Absență înregistrată',
+      'message': 'La Fizică pe 15.05.2023',
+      'time': 'Ieri',
+      'read': true,
     },
     {
-      'icon': 'star',
-      'text': 'Ai primit nota 9 la Științe pe 15.04.2025'
+      'type': 'general',
+      'title': 'Întâlnire părinți',
+      'message': 'Vineri, 19.05.2023, ora 18:00',
+      'time': 'Acum 3 zile',
+      'read': true,
     },
   ];
 
-  IconData iconFor(String key) {
-    switch (key) {
-      case 'check':
-        return Icons.check_circle;
-      case 'close':
-        return Icons.cancel;
-      case 'star':
-        return Icons.star;
-      default:
-        return Icons.notifications;
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'grade': return Icons.grade;
+      case 'attendance': return Icons.assignment;
+      case 'general': return Icons.announcement;
+      default: return Icons.notifications;
+    }
+  }
+
+  Color _getColorForType(String type) {
+    switch (type) {
+      case 'grade': return Colors.amber;
+      case 'attendance': return Colors.red;
+      case 'general': return Colors.blue;
+      default: return Colors.grey;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: SidebarDrawer(role: 'student', currentRoute: routeName),
-      appBar: AppBar(title: Text('Notificări')),
+      appBar: AppBar(
+        title: Text('Notificări'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.checklist),
+            onPressed: () {
+              // Marcar todas como leídas
+            },
+          ),
+        ],
+      ),
       body: ListView.separated(
         padding: EdgeInsets.all(16),
         itemCount: notifications.length,
         separatorBuilder: (_, __) => Divider(),
-        itemBuilder: (_, i) {
-          final n = notifications[i];
+        itemBuilder: (context, index) {
+          final notification = notifications[index];
           return ListTile(
-            leading: Icon(iconFor(n['icon']!)),
-            title: Text(n['text']!),
+            leading: CircleAvatar(
+              backgroundColor: _getColorForType(notification['type']).withOpacity(0.2),
+              child: Icon(
+                _getIconForType(notification['type']),
+                color: _getColorForType(notification['type']),
+              ),
+            ),
+            title: Text(
+              notification['title'],
+              style: TextStyle(
+                fontWeight: notification['read'] ? FontWeight.normal : FontWeight.bold,
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(notification['message']),
+                SizedBox(height: 4),
+                Text(
+                  notification['time'],
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
+              ],
+            ),
+            trailing: !notification['read'] 
+                ? CircleAvatar(radius: 4, backgroundColor: Colors.red)
+                : null,
+            onTap: () {
+              // Marcar como leída y mostrar detalles
+            },
           );
         },
       ),

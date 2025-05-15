@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
-import '../../widgets/notification_bell.dart';
+import '../../widgets/scaffolds/tutor_scaffold.dart';
 import 'notifications.dart';
 
 class TutorAttendanceScreen extends StatefulWidget {
@@ -12,12 +11,12 @@ class TutorAttendanceScreen extends StatefulWidget {
 
 class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
   final List<String> children = ['Bocai Robert', 'Ana Maria'];
+  int selectedChildIndex = 0;
 
-  // Dummy attendance stats per child per subject
-  final Map<String, Map<String, Map<String, int>>> attendance = {
+  final Map<String, Map<String, Map<String, int>>> attendanceData = {
     'Bocai Robert': {
       'Matematica': {'present': 18, 'absent': 4},
-      'Limba si Literatura Romana':       {'present': 20, 'absent': 2},
+      'Limba Română': {'present': 20, 'absent': 2},
     },
     'Ana Maria': {
       'Istorie': {'present': 19, 'absent': 3},
@@ -25,66 +24,73 @@ class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
     },
   };
 
-  int selectedChildIndex = 0;
-  final int newNotificationsCount = 0;
+  final int notificationCount = 0;
 
   @override
   Widget build(BuildContext context) {
-    String currentChild = children[selectedChildIndex];
-    final childAttendance = attendance[currentChild]!;
+    final currentChild = children[selectedChildIndex];
+    final childAttendance = attendanceData[currentChild]!;
 
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'tutor', currentRoute: TutorAttendanceScreen.routeName),
-      appBar: AppBar(
-        title: Text('Absențe $currentChild'),
-        actions: [
-          NotificationBell(
-            count: newNotificationsCount,
-            onTap: () => Navigator.of(context).pushNamed(TutorNotificationsScreen.routeName),
-          ),
-        ],
-      ),
+    return TutorScaffold(
+      currentIndex: 2,
+      notificationCount: notificationCount,
+      onNotificationTap: () => Navigator.pushNamed(context, TutorNotificationsScreen.routeName),
       body: Column(
         children: [
-          // Selector de hijo
           Padding(
-            padding: EdgeInsets.all(16),
-            child: DropdownButton<String>(
+            padding: const EdgeInsets.all(16.0),
+            child: DropdownButtonFormField<String>(
               value: currentChild,
-              items: children
-                  .map((n) => DropdownMenuItem(value: n, child: Text(n)))
-                  .toList(),
-              onChanged: (val) {
-                if (val != null) {
+              items: children.map((name) => 
+                DropdownMenuItem(value: name, child: Text(name))
+              ).toList(),
+              onChanged: (value) {
+                if (value != null) {
                   setState(() {
-                    selectedChildIndex = children.indexOf(val);
+                    selectedChildIndex = children.indexOf(value);
                   });
                 }
               },
+              decoration: InputDecoration(
+                labelText: 'Selectați copilul',
+                border: OutlineInputBorder(),
+              ),
             ),
           ),
           Expanded(
             child: ListView(
               padding: EdgeInsets.all(16),
-              children: childAttendance.entries.map((e) {
-                final subj = e.key;
-                final p = e.value['present']!;
-                final a = e.value['absent']!;
+              children: childAttendance.entries.map((subjectEntry) {
+                final subject = subjectEntry.key;
+                final stats = subjectEntry.value;
+                final total = stats['present']! + stats['absent']!;
+                final percentage = stats['present']! / total;
+                
                 return Card(
-                  margin: EdgeInsets.symmetric(vertical: 6),
-                  child: ListTile(
-                    title: Text(subj),
-                    subtitle: Text('Prezențe: $p · Absențe: $a'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+                  margin: EdgeInsets.only(bottom: 12),
+                  child: Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.check, color: Colors.green),
-                        SizedBox(width: 4),
-                        Text('$p'),
-                        SizedBox(width: 16),
-                        Icon(Icons.close, color: Colors.red),
-                        SizedBox(width: 4),
-                        Text('$a'),
+                        Text(
+                          subject,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        SizedBox(height: 8),
+                        LinearProgressIndicator(
+                          value: percentage,
+                          backgroundColor: Colors.red[100],
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                        ),
+                        SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Prezențe: ${stats['present']}'),
+                            Text('Absențe: ${stats['absent']}'),
+                          ],
+                        ),
                       ],
                     ),
                   ),
