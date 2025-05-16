@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
-import '../../widgets/notification_bell.dart';
+import '../../widgets/scaffolds/tutor_scaffold.dart';
 import 'notifications.dart';
 
 class TutorHomeScreen extends StatelessWidget {
   static const routeName = '/tutor/home';
 
-  // Dummy schedule for tutor’s children
-  final List<Map<String, String>> schedule = [
+  final List<Map<String, String>> childrenSchedule = [
     {
       'child': 'Bocai Robert',
       'day': 'Luni',
-      'time': '08:00–09:00',
+      'time': '08:00–09:00', 
       'subject': 'Matematica',
       'room': '101'
     },
@@ -19,36 +17,40 @@ class TutorHomeScreen extends StatelessWidget {
       'child': 'Ana Maria',
       'day': 'Marți',
       'time': '09:00–10:00',
-      'subject': 'Limba si Literatura Romana',
+      'subject': 'Limba Română',
       'room': '102'
     },
   ];
 
-  final int newNotificationsCount = 2;
+  final int notificationCount = 2;
 
   @override
-  Widget build(BuildContext ctx) {
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'tutor', currentRoute: routeName),
-      appBar: AppBar(
-        title: Text('Horarul copiilor'),
-        actions: [
-          NotificationBell(
-            count: newNotificationsCount,
-            onTap: () => Navigator.of(ctx).pushNamed(TutorNotificationsScreen.routeName),
-          ),
-        ],
-      ),
+  Widget build(BuildContext context) {
+    return TutorScaffold(
+      currentIndex: 0,
+      notificationCount: notificationCount,
+      onNotificationTap: () => Navigator.pushNamed(context, TutorNotificationsScreen.routeName),
       body: ListView.separated(
         padding: EdgeInsets.all(16),
-        itemCount: schedule.length,
+        itemCount: childrenSchedule.length,
         separatorBuilder: (_, __) => Divider(),
-        itemBuilder: (_, i) {
-          final e = schedule[i];
-          return ListTile(
-            leading: Icon(Icons.schedule),
-            title: Text('${e['child']}  •  ${e['day']} ${e['time']}'),
-            subtitle: Text('${e['subject']} · Sala ${e['room']}'),
+        itemBuilder: (context, index) {
+          final schedule = childrenSchedule[index];
+          return Card(
+            child: ListTile(
+              leading: CircleAvatar(
+                child: Text(schedule['child']!.substring(0, 1)),
+              ),
+              title: Text(schedule['child']!),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('${schedule['day']} ${schedule['time']}'),
+                  Text('${schedule['subject']} · Sala ${schedule['room']}'),
+                ],
+              ),
+              trailing: Icon(Icons.chevron_right),
+            ),
           );
         },
       ),

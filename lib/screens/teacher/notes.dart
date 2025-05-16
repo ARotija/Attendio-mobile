@@ -1,71 +1,55 @@
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
+import '../../widgets/scaffolds/teacher_scaffold.dart';
 
-class TeacherNotesScreen extends StatefulWidget {
+class TeacherNotesScreen extends StatelessWidget {
   static const routeName = '/teacher/notes';
-  @override _TeacherNotesScreenState createState() => _TeacherNotesScreenState();
-}
 
-class _TeacherNotesScreenState extends State<TeacherNotesScreen> {
-  String selectedClass = '9A';
-  String selectedStudent = 'Bocai Robert';
-
-  // Datos dummy
-  final classes = ['9A','10B','11C'];
-  final students = ['Bocai Robert','Popescu Maria','Vasile Elena','Popescu Andrei'];
-  final Map<String,List<String>> notesBySubject = {
-    'Matematica': [],
-    'Istorie': ['7 (01/05)','9 (15/04)'],
-    'Biologie': ['8 (20/03)'],
-  };
+  final List<Map<String, dynamic>> classes = [
+    {'class': '9A', 'subject': 'Matematică', 'students': 24},
+    {'class': '10B', 'subject': 'Fizică', 'students': 18},
+    {'class': '11C', 'subject': 'Informatică', 'students': 20},
+  ];
 
   @override
-  Widget build(BuildContext ctx) {
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'teacher', currentRoute: TeacherNotesScreen.routeName),
-      appBar: AppBar(title: Text('Note')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(children: [
-              Expanded(child: DropdownButtonFormField(
-                decoration: InputDecoration(labelText: 'Clasa'),
-                value: selectedClass,
-                items: classes.map((c)=>DropdownMenuItem(value: c, child: Text(c))).toList(),
-                onChanged: (v){ setState(()=> selectedClass = v!); },
-              )),
-              SizedBox(width: 16),
-              Expanded(child: DropdownButtonFormField(
-                decoration: InputDecoration(labelText: 'Elev'),
-                // Aquí se puede usar un FutureBuilder para cargar los alumnos de la clase seleccionada
-                value: selectedStudent,
-                items: students.map((s)=>DropdownMenuItem(value: s, child: Text(s))).toList(),
-                onChanged: (v){ setState(()=> selectedStudent = v!); },
-              )),
-            ]),
-            SizedBox(height: 24),
-            Expanded(
-              child: ListView(
-                children: notesBySubject.entries.map((entry){
-                  return ListTile(
-                    title: Text(entry.key),
-                    subtitle: entry.value.isEmpty
-                      ? Text('Fără note')
-                      : Wrap(
-                          spacing: 8,
-                          children: entry.value.map((n)=>Chip(label: Text(n))).toList(),
-                        ),
-                    trailing: Icon(Icons.edit),
-                    onTap: () {
-                      // Aquí muestra modal para agregar/eliminar
-                    },
-                  );
-                }).toList(),
+  Widget build(BuildContext context) {
+    return TeacherScaffold(
+      currentIndex: 1,
+      title: 'Note elevilor',
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Caută clasă sau elev...',
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
               ),
             ),
-          ],
-        ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: classes.length,
+              itemBuilder: (context, index) {
+                final cls = classes[index];
+                return Card(
+                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      child: Text(cls['class']),
+                    ),
+                    title: Text('Clasa ${cls['class']} - ${cls['subject']}'),
+                    subtitle: Text('${cls['students']} elevi'),
+                    trailing: Icon(Icons.arrow_forward),
+                    onTap: () {
+                      // Navegar a lista de elevi pentru notare
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
