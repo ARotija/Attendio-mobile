@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:attendio_mobile/theme.dart';
-import 'package:attendio_mobile/services/auth_service.dart'; // Importa el AuthService
+import 'package:attendio_mobile/services/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   static const routeName = '/login';
@@ -16,46 +16,42 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   bool isLoading = false;
 
-  // Manejo del login
-  Future<void> handleLogin() async {
-    setState(() => isLoading = true);
+Future<void> handleLogin() async {
+  setState(() => isLoading = true);
 
-    try {
-      final role = await AuthService.login(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
+  try {
+    final role = await AuthService.login(
+      emailController.text.trim(),
+      passwordController.text.trim(),
+    );
 
-      setState(() => isLoading = false);
+    setState(() => isLoading = false);
 
-      if (role != null) {
-        // Redirige según el rol obtenido
-        if (role == 'teacher') {
-          Navigator.pushReplacementNamed(context, '/teacher/home');
-        } else if (role == 'student') {
-          Navigator.pushReplacementNamed(context, '/student/home');
-        } else if (role == 'tutor') {
-          Navigator.pushReplacementNamed(context, '/tutor/home');
-        } else {
-          // Si el rol no es válido, muestra un error
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Rol no válido')),
-          );
-        }
+    if (role != null) {
+      if (role == 'teacher') {
+        Navigator.pushReplacementNamed(context, '/teacher/home');
+      } else if (role == 'student') {
+        Navigator.pushReplacementNamed(context, '/student/home');
+      } else if (role == 'tutor') {
+        Navigator.pushReplacementNamed(context, '/tutor/home');
       } else {
-        // Si el login falla
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email o contraseña incorrectos')),
+          const SnackBar(content: Text('Rol no válido')),
         );
       }
-    } catch (e) {
-      // Si ocurre algún error durante el login
-      setState(() => isLoading = false);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
+        const SnackBar(content: Text('Email o contraseña incorrectos')),
       );
     }
+  } catch (e) {
+    setState(() => isLoading = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error: ${e.toString()}')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -112,14 +108,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   onPressed: isLoading ? null : handleLogin,
                   child: isLoading
                       ? const CircularProgressIndicator(
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white))
                       : const Text('Iniciar sesión'),
                 ),
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Aquí podrías navegar a una pantalla de recuperación de contraseña
+                  // Navegar a recuperar contraseña (si lo tienes implementado)
                 },
                 child: const Text(
                   '¿Olvidaste tu contraseña?',
@@ -129,7 +126,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Redirige de forma fija a la ventana del profesor
+                  // Forzar entrada como alumno para pruebas
                   Navigator.pushReplacementNamed(context, '/student/home');
                 },
                 child: const Text(

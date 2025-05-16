@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/scaffolds/tutor_scaffold.dart';
 
 class TutorNotificationsScreen extends StatelessWidget {
   static const routeName = '/tutor/notifications';

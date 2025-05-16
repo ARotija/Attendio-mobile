@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // <-- Importa dotenv
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'theme.dart';
 import 'routes.dart';
+import 'services/auth_service.dart';
 
 Future<void> main() async {
-  // Cargar variables de entorno desde el archivo .env
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Cargar variables de entorno desde .env
   await dotenv.load(fileName: ".env");
 
-  runApp(const MyApp()); // Inicia la app después de cargar el archivo .env
+  // Verificar si hay token guardado (sesión activa)
+  final token = await AuthService.getAccessToken();
+
+  runApp(MyApp(isLoggedIn: token != null));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+
+  const MyApp({required this.isLoggedIn, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,8 +27,8 @@ class MyApp extends StatelessWidget {
       title: 'Attendio',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
-      initialRoute: '/login', // La ruta inicial debe ser la de login
-      routes: appRoutes, // Las rutas de tu aplicación
+      initialRoute: isLoggedIn ? '/student/home' : '/login',  // Cambia la ruta según sesión
+      routes: appRoutes,
     );
   }
 }

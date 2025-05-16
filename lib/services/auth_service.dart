@@ -1,40 +1,53 @@
-// lib/services/auth_service.dart
-
 import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:attendio_mobile/services/api_client.dart';
 
 class AuthService {
-  // Método para hacer login y obtener el rol
-  static Future<String?> login(String email, String password) async {
-    final baseUrl = dotenv.env['API_URL']; // Usar URL desde el archivo .env
-    if (baseUrl == null) {
-      throw Exception('API_URL no definida en el archivo .env');
+  static const _accessTokenKey = 'access_token';
+
+  // Guardar token localmente
+  static Future<void> saveAccessToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_accessTokenKey, token);
+    ApiClient.accessToken = token;
+  }
+
+  // Leer token localmente
+  static Future<String?> getAccessToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString(_accessTokenKey);
+    if (token != null) {
+      ApiClient.accessToken = token; // también actualizar ApiClient
     }
+    return token;
+  }
 
-    final url = Uri.parse('$baseUrl/login');
+  // Borrar token localmente (logout)
+  static Future<void> clearAccessToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_accessTokenKey);
+    ApiClient.accessToken = null;
+  }
 
-    try {
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
+  // Login -> retorna rol o null
+  static Future<String?> login(String email, String password) async {
+    final response = await ApiClient.post('/auth/login', {
+      'email': email,
+      'password': password,
+    });
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-
-        // Suponiendo que la respuesta contiene el rol del usuario
-        return data['role'];  // Devuelve el rol (por ejemplo: 'teacher', 'student', 'tutor')
-      } else {
-        // Si la respuesta es diferente a 200, muestra el error para depuración
-        print('Login fallido: ${response.statusCode}, ${response.body}');
-        return null;
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final token = data['access_token'];
+      if (token != null) {
+        await saveAccessToken(token);
       }
-    } catch (e) {
-      print('Error en la solicitud: $e');
+      return data['user']['role']?.toString().toLowerCase();
+    } else {
+      print(jsonDecode(response.body)['error']);
       return null;
     }
   }
+
+  // Aquí podrías agregar otros métodos como register, refresh token, etc.
 }
-//   } // Fin del método handleLogin

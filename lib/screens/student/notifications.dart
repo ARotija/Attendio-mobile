@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../widgets/scaffolds/student_scaffold.dart'; // se puede borrar
 
 class StudentNotificationsScreen extends StatelessWidget {
   static const routeName = '/student/notifications';
