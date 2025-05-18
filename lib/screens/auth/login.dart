@@ -15,16 +15,36 @@ class _LoginScreenState extends State<LoginScreen> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   bool isLoading = false;
+  String? errorMessage;
 
   Future<void> handleLogin() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    setState(() {
+      errorMessage = null;
+    });
+
+    // Validare câmpuri
+    if (email.isEmpty || password.isEmpty) {
+      setState(() {
+        errorMessage = 'Te rog completează toate câmpurile';
+      });
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      setState(() {
+        errorMessage = 'Adresa de email nu este validă';
+      });
+      return;
+    }
+
     setState(() => isLoading = true);
 
     try {
-      final role = await AuthService.login(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-
+      final role = await AuthService.login(email, password);
       setState(() => isLoading = false);
 
       if (role != null) {
@@ -35,20 +55,20 @@ class _LoginScreenState extends State<LoginScreen> {
         } else if (role == 'tutor') {
           Navigator.pushReplacementNamed(context, '/tutor/home');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Rol invalid')),
-          );
+          setState(() {
+            errorMessage = 'Rol invalid';
+          });
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email sau parolă incorectă')),
-        );
+        setState(() {
+          errorMessage = 'Email sau parolă incorectă';
+        });
       }
     } catch (e) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Eroare: ${e.toString()}')),
-      );
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Eroare: ${e.toString()}';
+      });
     }
   }
 
@@ -82,7 +102,18 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 8),
               const Text('Autentificare',
                   style: TextStyle(fontSize: 16, color: Colors.black54)),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              // Mesaj de eroare
+              if (errorMessage != null) ...[
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+              ],
+
               TextField(
                 controller: emailController,
                 decoration: const InputDecoration(
@@ -115,7 +146,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Navighează la ecranul de recuperare parolă (dacă este implementat)
                   Navigator.pushReplacementNamed(context, '/forgot-password');
                 },
                 child: const Text(
@@ -126,7 +156,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Intrare rapidă pentru profesor (test)
                   Navigator.pushReplacementNamed(context, '/teacher/home');
                 },
                 child: const Text(
@@ -137,7 +166,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Intrare rapidă pentru student (test)
                   Navigator.pushReplacementNamed(context, '/student/home');
                 },
                 child: const Text(
@@ -148,7 +176,6 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Intrare rapidă pentru tutor (test)
                   Navigator.pushReplacementNamed(context, '/tutor/home');
                 },
                 child: const Text(
