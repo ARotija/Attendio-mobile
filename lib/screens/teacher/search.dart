@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../widgets/scaffolds/teacher_scaffold.dart';
 
-class TeacherSearchScreen extends StatelessWidget {
+class TeacherSearchScreen extends StatefulWidget {
   static const routeName = '/teacher/search';
+
+  @override
+  _TeacherSearchScreenState createState() => _TeacherSearchScreenState();
+}
+
+class _TeacherSearchScreenState extends State<TeacherSearchScreen> {
+  final List<String> classes = ['Clasa a IX-a A', 'Clasa a X-a B', 'Clasa a XI-a C'];
+  String? selectedClass;
 
   @override
   Widget build(BuildContext context) {
@@ -13,82 +21,36 @@ class TeacherSearchScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
+            DropdownButtonFormField<String>(
+              value: selectedClass,
+              items: classes.map((className) {
+                return DropdownMenuItem(
+                  value: className,
+                  child: Text(className),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedClass = value;
+                });
+              },
               decoration: InputDecoration(
-                hintText: 'Caută elev, clasă sau materie...',
-                prefixIcon: Icon(Icons.search),
+                labelText: 'Selectează clasa',
                 border: OutlineInputBorder(),
               ),
             ),
-            SizedBox(height: 20),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                childAspectRatio: 1.5,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                children: [
-                  _buildSearchOption(
-                    context,
-                    icon: Icons.people,
-                    label: 'Elevi',
-                    color: Colors.blue,
-                  ),
-                  _buildSearchOption(
-                    context,
-                    icon: Icons.school,
-                    label: 'Clase',
-                    color: Colors.green,
-                  ),
-                  _buildSearchOption(
-                    context,
-                    icon: Icons.book,
-                    label: 'Materii',
-                    color: Colors.orange,
-                  ),
-                  _buildSearchOption(
-                    context,
-                    icon: Icons.calendar_today,
-                    label: 'Orar',
-                    color: Colors.purple,
-                  ),
-                ],
-              ),
+            SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                // TODO: Implement search logic
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Căutare pentru: $selectedClass')),
+                );
+              },
+              icon: Icon(Icons.search),
+              label: Text('Caută'),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSearchOption(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 2,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(4),
-        onTap: () {
-          // Acción al seleccionar esta opción de búsqueda
-        },
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 40, color: color),
-              SizedBox(height: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

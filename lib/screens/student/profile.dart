@@ -10,7 +10,7 @@ class StudentProfileScreen extends StatelessWidget {
     'Clasă': '9A',
     'Școală': 'Liceul Teoretic "Mihai Eminescu"',
     'Email': 'maria.ionescu@liceu.ro',
-    'Telefon': '+40 721 123 456',
+    'Cod student': 'ST123456',
   };
 
   final int notificationCount = 0;
@@ -26,8 +26,9 @@ class StudentProfileScreen extends StatelessWidget {
           children: [
             SizedBox(height: 20),
             CircleAvatar(
-              radius: 50,
-              backgroundImage: NetworkImage('https://randomuser.me/api/portraits/women/33.jpg'),
+            radius: 50,
+            backgroundImage: NetworkImage('https://cdn-icons-png.flaticon.com/512/4140/4140046.png'), // para mujer -->  https://cdn-icons-png.flaticon.com/512/4140/4140061.png
+            backgroundColor: Colors.transparent,
             ),
             SizedBox(height: 16),
             Text(
@@ -58,8 +59,10 @@ class StudentProfileScreen extends StatelessWidget {
               padding: EdgeInsets.symmetric(horizontal: 32),
               child: ElevatedButton.icon(
                 icon: Icon(Icons.settings),
-                label: Text('Setări cont'),
-                onPressed: () {},
+                label: Text('Schimbă parola'),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/forgot-password');
+                },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50),
                 ),
@@ -92,7 +95,7 @@ class StudentProfileScreen extends StatelessWidget {
       case 'Clasă': return Icons.school;
       case 'Școală': return Icons.account_balance;
       case 'Email': return Icons.email;
-      case 'Telefon': return Icons.phone;
+      case 'Cod student': return Icons.badge;
       default: return Icons.info;
     }
   }

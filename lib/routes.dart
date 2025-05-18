@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/auth/login.dart';
+import 'screens/auth/register.dart';
+import 'screens/auth/forgot_password.dart';
 import 'screens/teacher/home.dart';
 import 'screens/teacher/notes.dart';
 import 'screens/teacher/attendance.dart';
@@ -15,11 +17,14 @@ import 'screens/tutor/notes.dart';
 import 'screens/tutor/attendance.dart';
 import 'screens/tutor/notifications.dart';
 import 'screens/tutor/profile.dart';
+import 'screens/tutor/add_child.dart';
 
 /// Mapa de rutas para toda la aplicación
 final Map<String, WidgetBuilder> appRoutes = {
   // Authentication
   '/login': (context) => LoginScreen(),
+  '/register': (context) => RegisterScreen(),
+  '/forgot-password': (context) => ForgotPasswordScreen(),
 
   // Teacher
   '/teacher/home':       (context) => TeacherHomeScreen(),
@@ -41,4 +46,5 @@ final Map<String, WidgetBuilder> appRoutes = {
   '/tutor/attendance':   (context) => TutorAttendanceScreen(),
   '/tutor/notifications':(context) => TutorNotificationsScreen(),
   '/tutor/profile':      (context) => TutorProfileScreen(),
+  '/tutor/add-child': (context) => AddChildScreen(),
 };

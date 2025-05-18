@@ -57,7 +57,21 @@ class TutorProfileScreen extends StatelessWidget {
                 icon: Icon(Icons.group_add),
                 label: Text('Adăugați copil'),
                 onPressed: () {
-                  // Navegar a pantalla de agregar hijos
+                  Navigator.pushNamed(context, '/tutor/add-child');
+                },
+                style: ElevatedButton.styleFrom(
+                  minimumSize: Size(double.infinity, 50),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32),
+              child: ElevatedButton.icon(
+                icon: Icon(Icons.settings),
+                label: Text('Schimbă parola'),
+                onPressed: () {
+                  Navigator.pushNamed(context, '/forgot-password');
                 },
                 style: ElevatedButton.styleFrom(
                   minimumSize: Size(double.infinity, 50),

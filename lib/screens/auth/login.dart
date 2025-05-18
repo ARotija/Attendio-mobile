@@ -16,42 +16,41 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   bool isLoading = false;
 
-Future<void> handleLogin() async {
-  setState(() => isLoading = true);
+  Future<void> handleLogin() async {
+    setState(() => isLoading = true);
 
-  try {
-    final role = await AuthService.login(
-      emailController.text.trim(),
-      passwordController.text.trim(),
-    );
+    try {
+      final role = await AuthService.login(
+        emailController.text.trim(),
+        passwordController.text.trim(),
+      );
 
-    setState(() => isLoading = false);
+      setState(() => isLoading = false);
 
-    if (role != null) {
-      if (role == 'teacher') {
-        Navigator.pushReplacementNamed(context, '/teacher/home');
-      } else if (role == 'student') {
-        Navigator.pushReplacementNamed(context, '/student/home');
-      } else if (role == 'tutor') {
-        Navigator.pushReplacementNamed(context, '/tutor/home');
+      if (role != null) {
+        if (role == 'teacher') {
+          Navigator.pushReplacementNamed(context, '/teacher/home');
+        } else if (role == 'student') {
+          Navigator.pushReplacementNamed(context, '/student/home');
+        } else if (role == 'tutor') {
+          Navigator.pushReplacementNamed(context, '/tutor/home');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Rol invalid')),
+          );
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rol no válido')),
+          const SnackBar(content: Text('Email sau parolă incorectă')),
         );
       }
-    } else {
+    } catch (e) {
+      setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Email o contraseña incorrectos')),
+        SnackBar(content: Text('Eroare: ${e.toString()}')),
       );
     }
-  } catch (e) {
-    setState(() => isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error: ${e.toString()}')),
-    );
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -81,14 +80,14 @@ Future<void> handleLogin() async {
                       fontSize: 24,
                       letterSpacing: 1.5)),
               const SizedBox(height: 8),
-              const Text('Iniciar sesión',
+              const Text('Autentificare',
                   style: TextStyle(fontSize: 16, color: Colors.black54)),
               const SizedBox(height: 24),
               TextField(
                 controller: emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Correo electrónico',
-                  hintText: 'name@gmail.com',
+                  labelText: 'Adresă de email',
+                  hintText: 'exemplu@gmail.com',
                 ),
               ),
               const SizedBox(height: 16),
@@ -96,7 +95,7 @@ Future<void> handleLogin() async {
                 controller: passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(
-                  labelText: 'Contraseña',
+                  labelText: 'Parolă',
                   hintText: '********',
                 ),
               ),
@@ -110,30 +109,53 @@ Future<void> handleLogin() async {
                       ? const CircularProgressIndicator(
                           valueColor:
                               AlwaysStoppedAnimation<Color>(Colors.white))
-                      : const Text('Iniciar sesión'),
+                      : const Text('Autentificare'),
                 ),
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Navegar a recuperar contraseña (si lo tienes implementado)
+                  // Navighează la ecranul de recuperare parolă (dacă este implementat)
+                  Navigator.pushReplacementNamed(context, '/forgot-password');
                 },
                 child: const Text(
-                  '¿Olvidaste tu contraseña?',
+                  'Ai uitat parola?',
                   style: TextStyle(fontSize: 13),
                 ),
               ),
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () {
-                  // Forzar entrada como alumno para pruebas
+                  // Intrare rapidă pentru profesor (test)
+                  Navigator.pushReplacementNamed(context, '/teacher/home');
+                },
+                child: const Text(
+                  'Fereastra profesor',
+                  style: TextStyle(fontSize: 13, color: Colors.red),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  // Intrare rapidă pentru student (test)
                   Navigator.pushReplacementNamed(context, '/student/home');
                 },
                 child: const Text(
-                  'Ventana profesor',
+                  'Fereastra student',
                   style: TextStyle(fontSize: 13, color: Colors.red),
                 ),
-              )
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: () {
+                  // Intrare rapidă pentru tutor (test)
+                  Navigator.pushReplacementNamed(context, '/tutor/home');
+                },
+                child: const Text(
+                  'Fereastra tutor',
+                  style: TextStyle(fontSize: 13, color: Colors.red),
+                ),
+              ),
             ],
           ),
         ),

@@ -17,7 +17,7 @@ class AuthService {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_accessTokenKey);
     if (token != null) {
-      ApiClient.accessToken = token; // también actualizar ApiClient
+      ApiClient.accessToken = token;
     }
     return token;
   }
@@ -49,5 +49,33 @@ class AuthService {
     }
   }
 
-  // Aquí podrías agregar otros métodos como register, refresh token, etc.
+  // Registro -> retorna true si éxito, false si error
+  static Future<bool> register(String email, String password, String role) async {
+    final response = await ApiClient.post('/auth/register', {
+      'email': email,
+      'password': password,
+      'role': role,
+    });
+
+    if (response.statusCode == 201) {
+      return true;
+    } else {
+      print(jsonDecode(response.body)['error']);
+      return false;
+    }
+  }
+
+  // Recuperar contraseña -> retorna true si se envió email, false si error
+  static Future<bool> forgotPassword(String email) async {
+    final response = await ApiClient.post('/auth/forgot-password', {
+      'email': email,
+    });
+
+    if (response.statusCode == 200) {
+      return true;
+    } else {
+      print(jsonDecode(response.body)['error']);
+      return false;
+    }
+  }
 }

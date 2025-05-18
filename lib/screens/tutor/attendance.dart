@@ -13,14 +13,22 @@ class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
   final List<String> children = ['Bocai Robert', 'Ana Maria'];
   int selectedChildIndex = 0;
 
-  final Map<String, Map<String, Map<String, int>>> attendanceData = {
+  final Map<String, Map<String, List<Map<String, dynamic>>>> attendanceData = {
     'Bocai Robert': {
-      'Matematica': {'present': 18, 'absent': 4},
-      'Limba Română': {'present': 20, 'absent': 2},
+      'Matematica': [
+        {'date': '2024-10-10', 'motivated': false},
+        {'date': '2024-10-15', 'motivated': true},
+      ],
+      'Limba Română': [
+        {'date': '2024-10-12', 'motivated': false},
+      ],
     },
     'Ana Maria': {
-      'Istorie': {'present': 19, 'absent': 3},
-      'Biologie': {'present': 21, 'absent': 1},
+      'Istorie': [
+        {'date': '2024-10-14', 'motivated': true},
+        {'date': '2024-10-20', 'motivated': false},
+      ],
+      'Biologie': [],
     },
   };
 
@@ -41,8 +49,8 @@ class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
             padding: const EdgeInsets.all(16.0),
             child: DropdownButtonFormField<String>(
               value: currentChild,
-              items: children.map((name) => 
-                DropdownMenuItem(value: name, child: Text(name))
+              items: children.map((name) =>
+                  DropdownMenuItem(value: name, child: Text(name))
               ).toList(),
               onChanged: (value) {
                 if (value != null) {
@@ -60,12 +68,10 @@ class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
           Expanded(
             child: ListView(
               padding: EdgeInsets.all(16),
-              children: childAttendance.entries.map((subjectEntry) {
-                final subject = subjectEntry.key;
-                final stats = subjectEntry.value;
-                final total = stats['present']! + stats['absent']!;
-                final percentage = stats['present']! / total;
-                
+              children: childAttendance.entries.map((entry) {
+                final subject = entry.key;
+                final absences = entry.value;
+
                 return Card(
                   margin: EdgeInsets.only(bottom: 12),
                   child: Padding(
@@ -77,20 +83,30 @@ class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
                           subject,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
-                        SizedBox(height: 8),
-                        LinearProgressIndicator(
-                          value: percentage,
-                          backgroundColor: Colors.red[100],
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Prezențe: ${stats['present']}'),
-                            Text('Absențe: ${stats['absent']}'),
-                          ],
-                        ),
+                        SizedBox(height: 12),
+                        if (absences.isEmpty)
+                          Text(
+                            'Nicio absență.',
+                            style: TextStyle(color: Colors.green),
+                          )
+                        else
+                          Column(
+                            children: absences.map((absence) {
+                              final isMotivated = absence['motivated'] as bool;
+                              final date = absence['date'];
+                              return ListTile(
+                                leading: Icon(Icons.event,
+                                    color: isMotivated ? Colors.green : Colors.red),
+                                title: Text('Data: $date'),
+                                subtitle: Text(
+                                  isMotivated ? 'Absență motivată' : 'Absență nemotivată',
+                                  style: TextStyle(
+                                    color: isMotivated ? Colors.green : Colors.red,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
                       ],
                     ),
                   ),
