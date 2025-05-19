@@ -1,5 +1,6 @@
-// lib/screens/tutor/add_child_screen.dart
 import 'package:flutter/material.dart';
+import 'package:attendio_mobile/services/tutor_service.dart';
+import 'package:attendio_mobile/theme.dart';
 
 class AddChildScreen extends StatefulWidget {
   static const routeName = '/tutor/add-child';
@@ -11,75 +12,112 @@ class AddChildScreen extends StatefulWidget {
 }
 
 class _AddChildScreenState extends State<AddChildScreen> {
-  final nameController = TextEditingController();
-  final emailController = TextEditingController();
-  final classController = TextEditingController();
-
+  final codeController = TextEditingController();
   bool isLoading = false;
 
-  void handleAddChild() {
-    // Simulează salvarea copilului
+  Future<void> handleAddChild() async {
+    final code = codeController.text.trim();
+
+    if (code.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Introduceți codul studentului')),
+      );
+      return;
+    }
+
     setState(() => isLoading = true);
 
-    Future.delayed(const Duration(seconds: 1), () {
-      setState(() => isLoading = false);
+    try {
+      final success = await TutorService.addChild(code);
 
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Copilul a fost adăugat cu succes!')),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Codul nu este valid sau copilul este deja adăugat')),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Copilul a fost adăugat cu succes!')),
+        SnackBar(content: Text('Eroare: ${e.toString()}')),
       );
-      Navigator.pop(context);
-    });
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.primarySwatch[400],
       appBar: AppBar(
-        title: const Text('Adăugați copil'),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
+      body: Center(
+        child: Container(
+          width: 350,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nume copil',
-                  hintText: 'Ex: Andrei Popescu',
+              const Text(
+                'ATTENDIO',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  letterSpacing: 1.5,
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(
-                  labelText: 'Email copil',
-                  hintText: 'Ex: andrei@email.com',
-                ),
+              const SizedBox(height: 8),
+              const Text(
+                'Adăugați copil',
+                style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
+              const Text(
+                'Introduceți codul unic al studentului pentru a-l adăuga la contul dvs.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black87),
+              ),
+              const SizedBox(height: 24),
               TextField(
-                controller: classController,
+                controller: codeController,
                 decoration: const InputDecoration(
-                  labelText: 'Clasa',
-                  hintText: 'Ex: a VI-a B',
+                  labelText: 'Cod student',
+                  hintText: 'Ex: ST123456',
                 ),
               ),
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
+                height: 40,
                 child: ElevatedButton.icon(
                   onPressed: isLoading ? null : handleAddChild,
-                  icon: const Icon(Icons.check),
+                  icon: const Icon(Icons.person_add),
                   label: isLoading
                       ? const CircularProgressIndicator(
                           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                         )
                       : const Text('Adaugă copil'),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(50),
-                  ),
                 ),
               ),
             ],

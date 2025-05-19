@@ -17,9 +17,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final confirmPasswordController = TextEditingController();
 
   String? selectedRole;
+  String? selectedClass; // Nou
   bool isLoading = false;
 
+  final List<String> classOptions = [ // Nou
+    'Clasa a IX-a',
+    'Clasa a X-a',
+    'Clasa a XI-a',
+    'Clasa a XII-a',
+  ];
+
   Future<void> handleRegister() async {
+    final email = emailController.text.trim();
+    final password = passwordController.text;
+    final confirmPassword = confirmPasswordController.text;
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Adresa de email nu este validă')),
+      );
+      return;
+    }
+
     if (selectedRole == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Te rugăm să selectezi un rol')),
@@ -27,7 +47,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    if (passwordController.text != confirmPasswordController.text) {
+    if (selectedRole == 'student' && selectedClass == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Te rugăm să selectezi o clasă')),
+      );
+      return;
+    }
+
+    if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Parolele nu coincid')),
       );
@@ -37,10 +64,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => isLoading = true);
 
     try {
+      // Trimite și clasa, dacă e student
       final success = await AuthService.register(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-        selectedRole!,
+        email,
+        password,
+        selectedRole!, // Poți trimite selectedClass ca parametru suplimentar dacă e nevoie
       );
 
       setState(() => isLoading = false);
@@ -88,41 +116,21 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('ATTENDIO',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                            letterSpacing: 1.5)),
+                    const Text(
+                      'ATTENDIO',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 24,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
                     const SizedBox(height: 8),
-                    const Text('Crează cont',
-                        style: TextStyle(fontSize: 16, color: Colors.black54)),
+                    const Text(
+                      'Crează cont',
+                      style: TextStyle(fontSize: 16, color: Colors.black54),
+                    ),
                     const SizedBox(height: 24),
-                    TextField(
-                      controller: emailController,
-                      decoration: const InputDecoration(
-                        labelText: 'Adresa de email',
-                        hintText: 'nume@exemplu.com',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Parolă',
-                        hintText: '********',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: confirmPasswordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                        labelText: 'Confirmă parola',
-                        hintText: '********',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
+
                     DropdownButtonFormField<String>(
                       value: selectedRole,
                       decoration: const InputDecoration(
@@ -141,10 +149,66 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       onChanged: (value) {
                         setState(() {
                           selectedRole = value;
+                          selectedClass = null; // Resetăm dacă se schimbă rolul
                         });
                       },
                     ),
+                    const SizedBox(height: 16),
+
+                    if (selectedRole == 'student') // Afișăm doar dacă e student
+                      Column(
+                        children: [
+                          DropdownButtonFormField<String>(
+                            value: selectedClass,
+                            decoration: const InputDecoration(
+                              labelText: 'Selectează clasa',
+                            ),
+                            items: classOptions.map((clasa) {
+                              return DropdownMenuItem(
+                                value: clasa,
+                                child: Text(clasa),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                selectedClass = value;
+                              });
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+                      ),
+
+                    TextField(
+                      controller: emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Adresa de email',
+                        hintText: 'nume@exemplu.com',
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Parolă',
+                        hintText: '********',
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: confirmPasswordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Confirmă parola',
+                        hintText: '********',
+                      ),
+                    ),
                     const SizedBox(height: 24),
+
                     SizedBox(
                       width: double.infinity,
                       height: 40,
@@ -152,7 +216,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         onPressed: isLoading ? null : handleRegister,
                         child: isLoading
                             ? const CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              )
                             : const Text('Înregistrează utilizator'),
                       ),
                     ),

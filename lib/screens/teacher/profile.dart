@@ -18,7 +18,7 @@ class TeacherProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TeacherScaffold(
-      currentIndex: 4,
+      currentIndex: 3,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -64,10 +64,10 @@ class TeacherProfileScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   ElevatedButton.icon(
-                    icon: Icon(Icons.settings),
-                    label: Text('Schimbă parola'),
+                    icon: Icon(Icons.add),
+                    label: Text('Inregistrează elev'),
                     onPressed: () {
-                      Navigator.pushNamed(context, '/forgot-password');
+                      // Aici adaugi funcționalitatea pentru înregistrarea elevilor
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(double.infinity, 50),

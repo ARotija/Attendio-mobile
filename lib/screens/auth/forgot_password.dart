@@ -14,14 +14,26 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final emailController = TextEditingController();
   bool isLoading = false;
+  String? errorMessage;
 
   Future<void> handleForgotPassword() async {
     final email = emailController.text.trim();
+    setState(() {
+      errorMessage = null;
+    });
 
     if (email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Te rog introdu adresa de email')),
-      );
+      setState(() {
+        errorMessage = 'Te rog introdu adresa de email';
+      });
+      return;
+    }
+
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      setState(() {
+        errorMessage = 'Adresa de email nu este validă';
+      });
       return;
     }
 
@@ -33,20 +45,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       setState(() => isLoading = false);
 
       if (success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email trimis pentru resetarea parolei')),
-        );
-        Navigator.pop(context);
+        showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('Succes'),
+            content: const Text('Email trimis pentru resetarea parolei.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        ).then((_) => Navigator.pop(context));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nu s-a putut trimite emailul, încearcă din nou')),
-        );
+        setState(() {
+          errorMessage = 'Nu s-a putut trimite emailul, încearcă din nou';
+        });
       }
     } catch (e) {
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Eroare: ${e.toString()}')),
-      );
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Eroare: ${e.toString()}';
+      });
     }
   }
 
@@ -59,7 +80,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              Navigator.of(context).pushReplacementNamed('/login');
+            }
+          },
         ),
       ),
       body: Center(
@@ -83,9 +110,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               const Text(
                 'ATTENDIO',
                 style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    letterSpacing: 1.5),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                  letterSpacing: 1.5,
+                ),
               ),
               const SizedBox(height: 8),
               const Text(
@@ -99,6 +127,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 style: TextStyle(fontSize: 14, color: Colors.black87),
               ),
               const SizedBox(height: 24),
+              if (errorMessage != null) ...[
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+              ],
               TextField(
                 controller: emailController,
                 decoration: const InputDecoration(
