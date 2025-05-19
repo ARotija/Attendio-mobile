@@ -1,168 +1,86 @@
+// lib/screens/student/attendance.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/scaffolds/student_scaffold.dart';
-import 'notifications.dart';
+import 'package:attendio_mobile/services/user_service.dart';
+import 'package:attendio_mobile/services/attendance_service.dart';
+import 'package:attendio_mobile/models/attendance_record.dart';
+import 'package:attendio_mobile/widgets/scaffolds/student_scaffold.dart';
+import 'package:attendio_mobile/routes.dart';
 
-class StudentAttendanceScreen extends StatelessWidget {
-  static const routeName = '/student/attendance';
+class StudentAttendanceScreen extends StatefulWidget {
+  static const routeName = AppRoutes.studentAttendance;
 
-  // Datos de ejemplo: ausencias por materia
-  final Map<String, List<Map<String, dynamic>>> absenceData = {
-    'Matematică': [
-      {'date': '2023-05-10', 'motivated': true},
-      {'date': '2023-05-17', 'motivated': false},
-    ],
-    'Limba Română': [], // Sin ausencias
-    'Fizică': [
-      {'date': '2023-04-15', 'motivated': false},
-      {'date': '2023-04-22', 'motivated': false},
-      {'date': '2023-05-05', 'motivated': true},
-    ],
-    'Informatică': [
-      {'date': '2023-03-10', 'motivated': true},
-    ],
-  };
+  const StudentAttendanceScreen({super.key});
 
-  // Calcular totales
-  int get totalMotivated => absenceData.values
-      .expand((absences) => absences)
-      .where((a) => a['motivated'] == true)
-      .length;
+  @override
+  State<StudentAttendanceScreen> createState() => _StudentAttendanceScreenState();
+}
 
-  int get totalUnmotivated => absenceData.values
-      .expand((absences) => absences)
-      .where((a) => a['motivated'] == false)
-      .length;
+class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
+  late Future<List<AttendanceRecord>> _futureAbsences;
 
-  final int notificationCount = 1;
+  @override
+  void initState() {
+    super.initState();
+    _futureAbsences = _loadAbsences();
+  }
+
+  Future<List<AttendanceRecord>> _loadAbsences() async {
+    // 1️⃣ Primero, obtén el perfil para tener classroom_id
+    final me = await UserService.getMe();
+    final classroomId = me.classroomId;
+    // 2️⃣ Luego, pide todos los registros de asistencia
+    final allRecords = await AttendanceService.getRecords(
+      classroomId: classroomId,
+      // opcional: period: null, date: null
+    );
+    // 3️⃣ Filtra solo los ausentes
+    return allRecords.where((r) => r.status == 'ABSENT').toList();
+  }
 
   @override
   Widget build(BuildContext context) {
     return StudentScaffold(
       currentIndex: 2,
-      notificationCount: notificationCount,
-      onNotificationTap: () => Navigator.pushNamed(context, StudentNotificationsScreen.routeName),
-      body: Column(
-        children: [
-          // Resumen de ausencias
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Card(
-              child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text(
-                      'Total absențe',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                    SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        _buildAbsenceCounter('Motivate', totalMotivated, Colors.green),
-                        _buildAbsenceCounter('Nemotivate', totalUnmotivated, Colors.red),
-                      ],
-                    ),
-                  ],
+      notificationCount: 0,
+      onNotificationTap: () => Navigator.pushNamed(
+          context, AppRoutes.studentNotifications),
+      body: FutureBuilder<List<AttendanceRecord>>(
+        future: _futureAbsences,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Eroare: ${snapshot.error}'));
+          }
+          final absences = snapshot.data!;
+          if (absences.isEmpty) {
+            return const Center(child: Text('Nu există absențe.'));
+          }
+          // 4️⃣ Renderiza la lista de absențe
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: absences.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, i) {
+              final rec = absences[i];
+              return ListTile(
+                leading: const Icon(Icons.event_busy, color: Colors.red),
+                title: Text(
+                  rec.date.toIso8601String().split('T').first,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ),
-            ),
-          ),
-          
-          // Lista de ausencias por materia
-          Expanded(
-            child: ListView(
-              children: absenceData.entries.map((subject) {
-                final subjectName = subject.key;
-                final absences = subject.value;
-                
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          subjectName,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        
-                        if (absences.isEmpty)
-                          Text(
-                            'Fără absențe',
-                            style: TextStyle(color: Colors.grey),
-                          )
-                        else
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: absences.map((absence) {
-                              return Chip(
-                                label: Text(
-                                  absence['date'],
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                backgroundColor: absence['motivated'] 
-                                    ? Colors.green 
-                                    : Colors.red,
-                                shape: StadiumBorder(
-                                  side: BorderSide(
-                                    color: absence['motivated']
-                                        ? Colors.green.shade800
-                                        : Colors.red.shade800,
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+                subtitle: Text('Perioada ${rec.period}'),
+                trailing: const Text(
+                  'Absent',
+                  style: TextStyle(color: Colors.red),
+                ),
+              );
+            },
+          );
+        },
       ),
-    );
-  }
-
-  Widget _buildAbsenceCounter(String label, int count, Color color) {
-    return Column(
-      children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 14),
-        ),
-        SizedBox(height: 4),
-        Container(
-          padding: EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            shape: BoxShape.circle,
-            border: Border.all(color: color),
-          ),
-          child: Text(
-            count.toString(),
-            style: TextStyle(
-              color: color,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

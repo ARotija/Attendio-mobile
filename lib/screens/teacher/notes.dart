@@ -1,14 +1,29 @@
+// lib/screens/teacher/notes.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/scaffolds/teacher_scaffold.dart';
+import 'package:attendio_mobile/services/classroom_service.dart';
+import 'package:attendio_mobile/models/classroom.dart';
+import 'package:attendio_mobile/widgets/scaffolds/teacher_scaffold.dart';
+import 'package:attendio_mobile/routes.dart';
 
-class TeacherNotesScreen extends StatelessWidget {
-  static const routeName = '/teacher/notes';
+class TeacherNotesScreen extends StatefulWidget {
+  static const routeName = AppRoutes.teacherNotes;
 
-  final List<Map<String, dynamic>> classes = [
-    {'class': '9A', 'subject': 'Matematică', 'students': 24},
-    {'class': '10B', 'subject': 'Fizică', 'students': 18},
-    {'class': '11C', 'subject': 'Informatică', 'students': 20},
-  ];
+  const TeacherNotesScreen({super.key});
+
+  @override
+  State<TeacherNotesScreen> createState() => _TeacherNotesScreenState();
+}
+
+class _TeacherNotesScreenState extends State<TeacherNotesScreen> {
+  late Future<List<Classroom>> _futureClasses;
+  String _search = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _futureClasses = ClassroomService.getClassrooms();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,34 +32,61 @@ class TeacherNotesScreen extends StatelessWidget {
       title: 'Note elevilor',
       body: Column(
         children: [
+          // campo de búsqueda
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
+              onChanged: (v) => setState(() => _search = v.trim().toLowerCase()),
               decoration: InputDecoration(
-                hintText: 'Caută clasă sau elev...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
+                hintText: 'Caută clasă...',
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
               ),
             ),
           ),
+
+          // lista de aulas
           Expanded(
-            child: ListView.builder(
-              itemCount: classes.length,
-              itemBuilder: (context, index) {
-                final cls = classes[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      child: Text(cls['class']),
-                    ),
-                    title: Text('Clasa ${cls['class']} - ${cls['subject']}'),
-                    subtitle: Text('${cls['students']} elevi'),
-                    trailing: Icon(Icons.arrow_forward),
-                    onTap: () {
-                      // Navegar a lista de elevi pentru notare
-                    },
-                  ),
+            child: FutureBuilder<List<Classroom>>(
+              future: _futureClasses,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(child: Text('Eroare: ${snap.error}'));
+                }
+                var classes = snap.data!
+                    .where((c) => c.name.toLowerCase().contains(_search))
+                    .toList();
+                if (classes.isEmpty) {
+                  return const Center(child: Text('Nicio clasă găsită.'));
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: classes.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final cls = classes[i];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: ListTile(
+                        leading: CircleAvatar(child: Text(cls.name[0])),
+                        title: Text('Clasa ${cls.name}'),
+                        subtitle: Text('ID: ${cls.id}'),
+                        trailing: const Icon(Icons.arrow_forward),
+                        onTap: () {
+                          // Aquí deberías navegar a la pantalla de detalle de notas
+                          // pasándole cls.id como argumento.
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.teacherNotes + '/class/${cls.id}',
+                            arguments: {'classroom_id': cls.id},
+                          );
+                        },
+                      ),
+                    );
+                  },
                 );
               },
             ),

@@ -1,14 +1,58 @@
+// lib/screens/teacher/attendance.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/scaffolds/teacher_scaffold.dart';
+import 'package:attendio_mobile/widgets/scaffolds/teacher_scaffold.dart';
+import 'package:attendio_mobile/services/attendance_service.dart';
+import 'package:attendio_mobile/models/attendance_record.dart';
+import 'package:attendio_mobile/routes.dart';
 
-class TeacherAttendanceScreen extends StatelessWidget {
-  static const routeName = '/teacher/attendance';
+class TeacherAttendanceScreen extends StatefulWidget {
+  static const routeName = AppRoutes.teacherAttendance;
 
-  final List<Map<String, dynamic>> attendanceRecords = [
-    {'date': '2023-05-15', 'class': '9A', 'subject': 'Matematică', 'present': 22, 'absent': 2},
-    {'date': '2023-05-14', 'class': '10B', 'subject': 'Fizică', 'present': 17, 'absent': 1},
-    {'date': '2023-05-13', 'class': '11C', 'subject': 'Informatică', 'present': 19, 'absent': 1},
-  ];
+  const TeacherAttendanceScreen({super.key});
+
+  @override
+  State<TeacherAttendanceScreen> createState() => _TeacherAttendanceScreenState();
+}
+
+class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
+  late final int classroomId;
+  int selectedPeriod = 1;
+  DateTime selectedDate = DateTime.now();
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    classroomId = args != null && args['classroom_id'] != null
+        ? args['classroom_id'] as int
+        : 0;
+  }
+
+  Future<List<AttendanceRecord>> _loadRecords() {
+      // Convertimos la fecha a "YYYY-MM-DD"
+      final dateStr = selectedDate.toIso8601String().split('T').first;
+      return AttendanceService.getRecords(
+        classroomId: classroomId,
+        period: selectedPeriod,
+        date: dateStr,
+      );
+  }
+
+  Future<void> _onScanPressed() async {
+    // Navegar a la pantalla de escaneo pasando los mismos parámetros
+    Navigator.pushNamed(
+      context,
+      AppRoutes.teacherScan,
+      arguments: {
+        'classroom_id': classroomId,
+        'period': selectedPeriod,
+      },
+    ).then((_) {
+      // Al volver del scan, recarga los registros
+      setState(() {});
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,116 +61,78 @@ class TeacherAttendanceScreen extends StatelessWidget {
       title: 'Prezențe',
       body: Column(
         children: [
+          // Filtros: fecha y periodo, y botón de nuevo scan
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    icon: Icon(Icons.add),
-                    label: Text('Prezență nouă'),
-                    onPressed: () {
-                      // Crear nueva asistencia
-                    },
+                // Selector de periodo
+                DropdownButton<int>(
+                  value: selectedPeriod,
+                  items: List.generate(
+                    6,
+                    (i) => DropdownMenuItem(
+                      value: i + 1,
+                      child: Text('Perioada ${i + 1}'),
+                    ),
                   ),
+                  onChanged: (val) {
+                    if (val != null) setState(() => selectedPeriod = val);
+                  },
+                ),
+                const Spacer(),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.fingerprint),
+                  label: const Text('Scan nou'),
+                  onPressed: _onScanPressed,
                 ),
               ],
             ),
           ),
+
+          // Lista de registros
           Expanded(
-            child: ListView.builder(
-              itemCount: attendanceRecords.length,
-              itemBuilder: (context, index) {
-                final record = attendanceRecords[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              '${record['date']}',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Chip(
-                              label: Text('Clasa ${record['class']}'),
-                            ),
-                          ],
+            child: FutureBuilder<List<AttendanceRecord>>(
+              future: _loadRecords(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Eroare: ${snapshot.error}'));
+                }
+                final records = snapshot.data!;
+                if (records.isEmpty) {
+                  return const Center(child: Text('Nu există date de prezență.'));
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: records.length,
+                  separatorBuilder: (_, __) => const Divider(),
+                  itemBuilder: (context, i) {
+                    final rec = records[i];
+                    return ListTile(
+                      title: Text('User #${rec.userId}'),
+                      subtitle: Text(
+                        '${rec.status} — ${rec.date.toIso8601String().split("T").first}',
+                      ),
+                      trailing: Text(
+                        rec.status == AttendanceStatus.present ? '✓' : '✗',
+                        style: TextStyle(
+                          color: rec.status == AttendanceStatus.present
+                              ? Colors.green
+                              : Colors.red,
+                          fontSize: 18,
                         ),
-                        SizedBox(height: 8),
-                        Text(
-                          record['subject'],
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          children: [
-                            AttendanceIndicator(
-                              count: record['present'],
-                              color: Colors.green,
-                              label: 'Prezenți',
-                            ),
-                            SizedBox(width: 16),
-                            AttendanceIndicator(
-                              count: record['absent'],
-                              color: Colors.red,
-                              label: 'Absenți',
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class AttendanceIndicator extends StatelessWidget {
-  final int count;
-  final Color color;
-  final String label;
-
-  const AttendanceIndicator({
-    required this.count,
-    required this.color,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Text(
-            '$count',
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12),
-        ),
-      ],
     );
   }
 }

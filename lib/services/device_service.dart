@@ -2,13 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../models/device.dart'; // Asegúrate de crear este modelo
+import '../models/device.dart';
 
 class DeviceService {
   static String get _baseUrl => dotenv.env['API_URL']!;
 
-  /// Helper para obtener el token JWT guardado
+  /// Helper para obtener el token JWT almacenado
   static Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('access_token');
@@ -30,14 +29,14 @@ class DeviceService {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: json.encode({'device_id': deviceId}),
+      body: jsonEncode({'device_id': deviceId}),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = json.decode(response.body) as Map<String, dynamic>;
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
       return Device.fromJson(data);
     } else {
-      throw Exception('Failed to add device: ${response.body}');
+      throw Exception('Failed to add device: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -50,16 +49,18 @@ class DeviceService {
     final uri = Uri.parse('$_baseUrl/api/v1/devices/users/$userId/devices');
     final response = await http.get(
       uri,
-      headers: {'Authorization': 'Bearer $token'},
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode == 200) {
-      final list = json.decode(response.body) as List<dynamic>;
+      final list = jsonDecode(response.body) as List<dynamic>;
       return list
           .map((e) => Device.fromJson(e as Map<String, dynamic>))
           .toList();
     } else {
-      throw Exception('Failed to list devices: ${response.body}');
+      throw Exception('Failed to list devices: ${response.statusCode} ${response.body}');
     }
   }
 
@@ -72,15 +73,16 @@ class DeviceService {
     final token = await _getToken();
     if (token == null) throw Exception('No access token found');
 
-    final uri = Uri.parse(
-        '$_baseUrl/api/v1/devices/users/$userId/devices/$deviceId');
+    final uri = Uri.parse('$_baseUrl/api/v1/devices/users/$userId/devices/$deviceId');
     final response = await http.delete(
       uri,
-      headers: {'Authorization': 'Bearer $token'},
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to remove device: ${response.body}');
+      throw Exception('Failed to remove device: ${response.statusCode} ${response.body}');
     }
   }
 }

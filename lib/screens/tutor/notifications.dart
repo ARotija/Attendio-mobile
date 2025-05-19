@@ -8,7 +8,7 @@ class TutorNotificationsScreen extends StatelessWidget {
       'child': 'Ana Maria',
       'type': 'attendance',
       'title': 'Absență înregistrată',
-      'message': 'La Matematica pe 05/02/2025',
+      'message': 'La Matematică pe 05/02/2025',
       'time': 'Acum 2 ore',
       'read': false,
     },
@@ -24,17 +24,23 @@ class TutorNotificationsScreen extends StatelessWidget {
 
   IconData _getIconForType(String type) {
     switch (type) {
-      case 'grade': return Icons.grade;
-      case 'attendance': return Icons.assignment;
-      default: return Icons.notifications;
+      case 'grade':
+        return Icons.grade;
+      case 'attendance':
+        return Icons.assignment_turned_in;
+      default:
+        return Icons.notifications;
     }
   }
 
   Color _getColorForType(String type) {
     switch (type) {
-      case 'grade': return Colors.amber;
-      case 'attendance': return Colors.red;
-      default: return Colors.blue;
+      case 'grade':
+        return Colors.amber;
+      case 'attendance':
+        return Colors.red;
+      default:
+        return Colors.blue;
     }
   }
 
@@ -42,22 +48,28 @@ class TutorNotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notificări'),
+        title: const Text('Notificări'),
         actions: [
           IconButton(
-            icon: Icon(Icons.checklist),
+            icon: const Icon(Icons.mark_email_read),
+            tooltip: 'Marchează toate ca citite',
             onPressed: () {
-              // Marcar todas como leídas
+              // Aquí podrías implementar lógica para marcar como citadas
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Toate notificările au fost marcate ca citite')),
+              );
             },
           ),
         ],
       ),
       body: ListView.separated(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         itemCount: notifications.length,
-        separatorBuilder: (_, __) => Divider(),
+        separatorBuilder: (_, __) => const Divider(),
         itemBuilder: (context, index) {
           final notification = notifications[index];
+          final isRead = notification['read'] as bool;
+
           return ListTile(
             leading: CircleAvatar(
               backgroundColor: _getColorForType(notification['type']).withOpacity(0.2),
@@ -72,12 +84,12 @@ class TutorNotificationsScreen extends StatelessWidget {
                 Text(
                   notification['title'],
                   style: TextStyle(
-                    fontWeight: notification['read'] ? FontWeight.normal : FontWeight.bold,
+                    fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
                   ),
                 ),
                 Text(
                   notification['child'],
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
@@ -85,16 +97,16 @@ class TutorNotificationsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(notification['message']),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   notification['time'],
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
-            trailing: !notification['read'] 
-                ? CircleAvatar(radius: 4, backgroundColor: Colors.red)
-                : null,
+            trailing: isRead
+                ? null
+                : const CircleAvatar(radius: 4, backgroundColor: Colors.red),
           );
         },
       ),

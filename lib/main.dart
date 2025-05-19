@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
       title: 'Attendio',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
-      initialRoute: '/login', // La ruta inicial debe ser la de login
+      initialRoute: AppRoutes.login, // La ruta inicial debe ser la de login
       routes: appRoutes, // Las rutas de tu aplicación
     );
   }

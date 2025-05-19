@@ -1,99 +1,169 @@
+// lib/screens/student/profile.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/scaffolds/student_scaffold.dart';
-import 'notifications.dart';
+import 'package:attendio_mobile/widgets/scaffolds/student_scaffold.dart';
+import 'package:attendio_mobile/services/user_service.dart';
+import 'package:attendio_mobile/services/device_service.dart';
+import 'package:attendio_mobile/services/auth_service.dart';
+import 'package:attendio_mobile/models/user.dart';
+import 'package:attendio_mobile/models/device.dart';
+import 'package:attendio_mobile/routes.dart';
 
-class StudentProfileScreen extends StatelessWidget {
-  static const routeName = '/student/profile';
+class StudentProfileScreen extends StatefulWidget {
+  static const routeName = AppRoutes.studentProfile;
 
-  final Map<String, String> userData = {
-    'Nume': 'Ionescu Maria',
-    'Clasă': '9A',
-    'Școală': 'Liceul Teoretic "Mihai Eminescu"',
-    'Email': 'maria.ionescu@liceu.ro',
-    'Telefon': '+40 721 123 456',
-  };
+  const StudentProfileScreen({super.key});
 
-  final int notificationCount = 0;
+  @override
+  State<StudentProfileScreen> createState() => _StudentProfileScreenState();
+}
+
+class _StudentProfileScreenState extends State<StudentProfileScreen> {
+  late Future<User> _futureUser;
+  late Future<List<Device>> _futureDevices;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureUser = UserService.getMe();
+    _futureDevices = _futureUser.then((user) => DeviceService.listDevices(user.id));
+  }
 
   @override
   Widget build(BuildContext context) {
     return StudentScaffold(
       currentIndex: 3,
-      notificationCount: notificationCount,
-      onNotificationTap: () => Navigator.pushNamed(context, StudentNotificationsScreen.routeName),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(height: 20),
-            CircleAvatar(
-              radius: 50,
-              backgroundImage: NetworkImage('https://randomuser.me/api/portraits/women/33.jpg'),
-            ),
-            SizedBox(height: 16),
-            Text(
-              userData['Nume']!,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            Text(
-              'Elev - ${userData['Clasă']}',
-              style: TextStyle(color: Colors.grey),
-            ),
-            SizedBox(height: 24),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16),
-              child: Card(
-                child: Column(
-                  children: userData.entries.map((entry) {
-                    return ListTile(
-                      leading: Icon(_getIconForField(entry.key)),
-                      title: Text(entry.key),
-                      subtitle: Text(entry.value),
-                    );
-                  }).toList(),
+      notificationCount: 0,
+      onNotificationTap: () => Navigator.pushNamed(
+        context, AppRoutes.studentNotifications),
+      body: FutureBuilder<User>(
+        future: _futureUser,
+        builder: (context, userSnap) {
+          if (userSnap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (userSnap.hasError) {
+            return Center(child: Text('Error: ${userSnap.error}'));
+          }
+          final user = userSnap.data!;
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                CircleAvatar(
+                  radius: 50,
+                  backgroundImage: NetworkImage(
+                    'https://cdn-icons-png.flaticon.com/512/4140/4140046.png'),
+                  backgroundColor: Colors.transparent,
                 ),
-              ),
-            ),
-            SizedBox(height: 20),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32),
-              child: ElevatedButton.icon(
-                icon: Icon(Icons.settings),
-                label: Text('Setări cont'),
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
+                const SizedBox(height: 16),
+                Text(user.name, style: Theme.of(context).textTheme.headlineSmall),
+                Text('Elev - ${user.classroomName ?? "–"}',
+                    style: const TextStyle(color: Colors.grey)),
+                const SizedBox(height: 24),
+
+                // Datos del usuario
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Card(
+                    child: Column(
+                      children: [
+                        ListTile(
+                          leading: const Icon(Icons.email),
+                          title: const Text('Email'),
+                          subtitle: Text(user.email),
+                        ),
+                        ListTile(
+                          leading: const Icon(Icons.badge),
+                          title: const Text('Cod student'),
+                          subtitle: Text(user.studentCode ?? '–'),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(height: 10),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 32),
-              child: OutlinedButton.icon(
-                icon: Icon(Icons.logout),
-                label: Text('Deconectare'),
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/login');
-                },
-                style: OutlinedButton.styleFrom(
-                  minimumSize: Size(double.infinity, 50),
-                  foregroundColor: Colors.red,
+
+                const SizedBox(height: 24),
+
+                // Dispositivos BLE
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: FutureBuilder<List<Device>>(
+                    future: _futureDevices,
+                    builder: (context, devSnap) {
+                      if (devSnap.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (devSnap.hasError) {
+                        return Center(child: Text('Error: ${devSnap.error}'));
+                      }
+                      final devices = devSnap.data!;
+                      return Card(
+                        child: ExpansionTile(
+                          title: const Text('Dispozitive asociate'),
+                          children: devices.map((d) {
+                            return ListTile(
+                              leading: const Icon(Icons.bluetooth),
+                              title: Text(d.id),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () async {
+                                  await DeviceService.removeDevice(
+                                    userId: user.id,
+                                    deviceId: d.id,
+                                  );
+                                  setState(() {
+                                    _futureDevices =
+                                        DeviceService.listDevices(user.id);
+                                  });
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
+
+                const SizedBox(height: 24),
+
+                // Botones
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.settings),
+                    label: const Text('Schimbă parola'),
+                    onPressed: () {
+                      Navigator.pushNamed(context, AppRoutes.forgotPassword);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.logout),
+                    label: const Text('Deconectare'),
+                    onPressed: () async {
+                      await AuthService.logout();
+                      Navigator.pushReplacementNamed(context, AppRoutes.login);
+                    },
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                      foregroundColor: Colors.red,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
-  }
-
-  IconData _getIconForField(String field) {
-    switch (field) {
-      case 'Nume': return Icons.person;
-      case 'Clasă': return Icons.school;
-      case 'Școală': return Icons.account_balance;
-      case 'Email': return Icons.email;
-      case 'Telefon': return Icons.phone;
-      default: return Icons.info;
-    }
   }
 }
