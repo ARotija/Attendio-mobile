@@ -10,7 +10,6 @@ class TeacherProfileScreen extends StatelessWidget {
     'Școală': 'Liceul Teoretic "Mihai Eminescu"',
     'Email': 'maria.ionescu@liceu.ro',
     'Telefon': '0741234567',
-    'Cod student': 'ST123456',
   };
 
   final int notificationCount = 0;
@@ -18,7 +17,7 @@ class TeacherProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TeacherScaffold(
-      currentIndex: 3,
+      currentIndex: 4,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -64,10 +63,10 @@ class TeacherProfileScreen extends StatelessWidget {
                   ),
                   SizedBox(height: 10),
                   ElevatedButton.icon(
-                    icon: Icon(Icons.add),
-                    label: Text('Inregistrează elev'),
+                    icon: Icon(Icons.settings),
+                    label: Text('Schimbă parola'),
                     onPressed: () {
-                      // Aici adaugi funcționalitatea pentru înregistrarea elevilor
+                      Navigator.pushNamed(context, '/forgot-password');
                     },
                     style: ElevatedButton.styleFrom(
                       minimumSize: Size(double.infinity, 50),
@@ -107,8 +106,6 @@ class TeacherProfileScreen extends StatelessWidget {
         return Icons.account_balance;
       case 'Email':
         return Icons.email;
-      case 'Cod student':
-        return Icons.badge;
       case 'Telefon':
         return Icons.phone;
       default:

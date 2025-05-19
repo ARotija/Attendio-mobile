@@ -26,7 +26,7 @@ class TutorProfileScreen extends StatelessWidget {
             SizedBox(height: 20),
             CircleAvatar(
               radius: 50,
-              backgroundImage: NetworkImage('https://randomuser.me/api/portraits/women/43.jpg'),
+              backgroundImage: NetworkImage('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?fit=crop&w=512&h=512'),
             ),
             SizedBox(height: 16),
             Text(
@@ -64,7 +64,7 @@ class TutorProfileScreen extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 8), // Reduje el espacio entre los dos botones azules
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 32),
               child: ElevatedButton.icon(
