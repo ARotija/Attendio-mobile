@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:attendio_mobile/theme.dart';
 import 'package:attendio_mobile/services/auth_service.dart';
-import 'package:attendio_mobile/services/user_service.dart';     // <-- NUEVO
-import 'package:attendio_mobile/models/user.dart';               // <-- NUEVO
+import 'package:attendio_mobile/services/storage_service.dart';
+import 'package:attendio_mobile/routes.dart';
 
 class LoginScreen extends StatefulWidget {
-  static const routeName = '/login';
+  static const routeName = AppRoutes.login;
 
   const LoginScreen({super.key});
 
@@ -14,56 +14,59 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
+  final emailController    = TextEditingController();
   final passwordController = TextEditingController();
-  bool isLoading = false;
+  bool isLoading           = false;
+  String? errorMessage;
 
-  // Manejo del login
   Future<void> handleLogin() async {
+    final email    = emailController.text.trim();
+    final password = passwordController.text.trim();
+
+    setState(() => errorMessage = null);
+
+    // 1️⃣ Validaciones locales
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => errorMessage = 'Te rog completează toate câmpurile');
+      return;
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      setState(() => errorMessage = 'Adresa de email nu este validă');
+      return;
+    }
+
     setState(() => isLoading = true);
 
-    try {
-      // 1) Intentar hacer login y guardar tokens
-      final success = await AuthService.login(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
+    // 2️⃣ Llamada al servicio de autenticación (login + GET /users/me)
+    final success = await AuthService.login(email, password);
+    setState(() => isLoading = false);
 
-      if (!success) {
-        // Si falla el login, mostramos mensaje
-        setState(() => isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Email o contraseña incorrectos')),
-        );
-        return;
-      }
+    if (!success) {
+      setState(() => errorMessage = 'Email sau parolă incorectă');
+      return;
+    }
 
-      // 2) Login exitoso: obtener perfil para saber el rol
-      final User me = await UserService.getMe();   // <-- NUEVO
-      setState(() => isLoading = false);
+    // 3️⃣ Recuperar rol desde StorageService (guardado tras GET /users/me)
+    final role = await StorageService.getRole();
+    if (role == null) {
+      setState(() => errorMessage = 'Eroare la citirea rolului utilizatorului');
+      return;
+    }
 
-      // 3) Redirigir según el rol
-      switch (me.role.name.toLowerCase()) {
-        case 'teacher':
-          Navigator.pushReplacementNamed(context, '/teacher/home');
-          break;
-        case 'student':
-          Navigator.pushReplacementNamed(context, '/student/home');
-          break;
-        case 'tutor':
-          Navigator.pushReplacementNamed(context, '/tutor/home');
-          break;
-        default:
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Rol no válido')),
-          );
-      }
-    } catch (e) {
-      // Cualquier otro error
-      setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+    // 4️⃣ Navegar según rol
+    switch (role.toUpperCase()) {
+      case 'TEACHER':
+        Navigator.pushReplacementNamed(context, AppRoutes.teacherHome);
+        break;
+      case 'STUDENT':
+        Navigator.pushReplacementNamed(context, AppRoutes.studentHome);
+        break;
+      case 'TUTOR':
+        Navigator.pushReplacementNamed(context, AppRoutes.tutorHome);
+        break;
+      default:
+        setState(() => errorMessage = 'Rol invalid: $role');
     }
   }
 
@@ -79,74 +82,74 @@ class _LoginScreenState extends State<LoginScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
+              BoxShadow(color: Colors.black26, blurRadius: 10, offset: Offset(0, 4)),
             ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('ATTENDIO',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                      letterSpacing: 1.5)),
+              const Text(
+                'ATTENDIO',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24, letterSpacing: 1.5),
+              ),
               const SizedBox(height: 8),
-              const Text('Iniciar sesión',
-                  style: TextStyle(fontSize: 16, color: Colors.black54)),
-              const SizedBox(height: 24),
+              const Text('Autentificare', style: TextStyle(fontSize: 16, color: Colors.black54)),
+              const SizedBox(height: 16),
+
+              // Mensaje de error
+              if (errorMessage != null) ...[
+                Text(
+                  errorMessage!,
+                  style: const TextStyle(color: Colors.red, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // Email
               TextField(
                 controller: emailController,
                 decoration: const InputDecoration(
-                  labelText: 'Correo electrónico',
-                  hintText: 'name@gmail.com',
+                  labelText: 'Adresă de email',
+                  hintText: 'exemplu@gmail.com',
                 ),
               ),
               const SizedBox(height: 16),
+
+              // Contraseña
               TextField(
                 controller: passwordController,
                 obscureText: true,
                 decoration: const InputDecoration(
-                  labelText: 'Contraseña',
+                  labelText: 'Parolă',
                   hintText: '********',
                 ),
               ),
               const SizedBox(height: 24),
+
+              // Botón de login
               SizedBox(
                 width: double.infinity,
                 height: 40,
                 child: ElevatedButton(
                   onPressed: isLoading ? null : handleLogin,
                   child: isLoading
-                      ? const CircularProgressIndicator(
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white))
-                      : const Text('Iniciar sesión'),
+                      ? const CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Colors.white))
+                      : const Text('Autentificare'),
                 ),
               ),
+
               const SizedBox(height: 16),
+
+              // Enlaces secundarios
               TextButton(
-                onPressed: () {
-                  // TODO: navegar a pantalla de recuperación de contraseña
-                },
-                child: const Text(
-                  '¿Olvidaste tu contraseña?',
-                  style: TextStyle(fontSize: 13),
-                ),
+                onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPassword),
+                child: const Text('Ai uitat parola?', style: TextStyle(fontSize: 13)),
               ),
-              const SizedBox(height: 16),
               TextButton(
-                onPressed: () {
-                  Navigator.pushReplacementNamed(context, '/student/home');
-                },
-                child: const Text(
-                  'Ventana estudiante (demo)',
-                  style: TextStyle(fontSize: 13, color: Colors.red),
-                ),
-              )
+                onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
+                child: const Text('Înregistrează-te', style: TextStyle(fontSize: 13)),
+              ),
             ],
           ),
         ),

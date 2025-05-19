@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class StudentNotificationsScreen extends StatelessWidget {
   static const routeName = '/student/notifications';
 
-  final List<Map<String, dynamic>> notifications = [
+  final List<Map<String, dynamic>> notifications = const [
     {
       'type': 'grade',
       'title': 'Ai primit o notă nouă',
@@ -29,19 +29,27 @@ class StudentNotificationsScreen extends StatelessWidget {
 
   IconData _getIconForType(String type) {
     switch (type) {
-      case 'grade': return Icons.grade;
-      case 'attendance': return Icons.assignment;
-      case 'general': return Icons.announcement;
-      default: return Icons.notifications;
+      case 'grade':
+        return Icons.grade;
+      case 'attendance':
+        return Icons.assignment;
+      case 'general':
+        return Icons.announcement;
+      default:
+        return Icons.notifications;
     }
   }
 
   Color _getColorForType(String type) {
     switch (type) {
-      case 'grade': return Colors.amber;
-      case 'attendance': return Colors.red;
-      case 'general': return Colors.blue;
-      default: return Colors.grey;
+      case 'grade':
+        return Colors.amber;
+      case 'attendance':
+        return Colors.red;
+      case 'general':
+        return Colors.blue;
+      default:
+        return Colors.grey;
     }
   }
 
@@ -49,52 +57,58 @@ class StudentNotificationsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notificări'),
+        title: const Text('Notificări'),
         actions: [
           IconButton(
-            icon: Icon(Icons.checklist),
+            icon: const Icon(Icons.checklist),
             onPressed: () {
-              // Marcar todas como leídas
+              // TODO: Marcar toate notificările ca citite
             },
           ),
         ],
       ),
       body: ListView.separated(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         itemCount: notifications.length,
-        separatorBuilder: (_, __) => Divider(),
+        separatorBuilder: (_, __) => const Divider(),
         itemBuilder: (context, index) {
           final notification = notifications[index];
+          final String type = notification['type'];
+          final String title = notification['title'];
+          final String message = notification['message'];
+          final String time = notification['time'];
+          final bool read = notification['read'];
+
           return ListTile(
             leading: CircleAvatar(
-              backgroundColor: _getColorForType(notification['type']).withOpacity(0.2),
+              backgroundColor: _getColorForType(type).withOpacity(0.2),
               child: Icon(
-                _getIconForType(notification['type']),
-                color: _getColorForType(notification['type']),
+                _getIconForType(type),
+                color: _getColorForType(type),
               ),
             ),
             title: Text(
-              notification['title'],
+              title,
               style: TextStyle(
-                fontWeight: notification['read'] ? FontWeight.normal : FontWeight.bold,
+                fontWeight: read ? FontWeight.normal : FontWeight.bold,
               ),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(notification['message']),
-                SizedBox(height: 4),
+                Text(message),
+                const SizedBox(height: 4),
                 Text(
-                  notification['time'],
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                  time,
+                  style: const TextStyle(fontSize: 12, color: Colors.grey),
                 ),
               ],
             ),
-            trailing: !notification['read'] 
-                ? CircleAvatar(radius: 4, backgroundColor: Colors.red)
+            trailing: !read
+                ? const CircleAvatar(radius: 4, backgroundColor: Colors.red)
                 : null,
             onTap: () {
-              // Marcar como leída y mostrar detalles
+              // TODO: Marcar ca citită și/sau deschide detalii
             },
           );
         },

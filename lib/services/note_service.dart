@@ -11,7 +11,7 @@ class NoteService {
     final token = await StorageService.getAccessToken();
     if (token == null) throw Exception('No access token found');
 
-    final url = Uri.parse('$_baseUrl/students/$studentId/notes');
+    final url = Uri.parse('$_baseUrl/api/v1/notes/students/$studentId/notes');
     final response = await http.get(
       url,
       headers: {

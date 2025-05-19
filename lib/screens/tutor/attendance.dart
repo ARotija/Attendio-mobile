@@ -1,104 +1,144 @@
+// lib/screens/tutor/attendance.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/scaffolds/tutor_scaffold.dart';
-import 'notifications.dart';
+import 'package:attendio_mobile/services/tutor_service.dart';
+import 'package:attendio_mobile/services/attendance_service.dart';
+import 'package:attendio_mobile/models/user.dart';
+import 'package:attendio_mobile/models/attendance_record.dart';
+import 'package:attendio_mobile/widgets/scaffolds/tutor_scaffold.dart';
+import 'package:attendio_mobile/routes.dart';
 
 class TutorAttendanceScreen extends StatefulWidget {
-  static const routeName = '/tutor/attendance';
+  static const routeName = AppRoutes.tutorAttendance;
+
+  const TutorAttendanceScreen({super.key});
 
   @override
   _TutorAttendanceScreenState createState() => _TutorAttendanceScreenState();
 }
 
 class _TutorAttendanceScreenState extends State<TutorAttendanceScreen> {
-  final List<String> children = ['Bocai Robert', 'Ana Maria'];
-  int selectedChildIndex = 0;
+  List<User> _children = [];
+  User? _selectedChild;
+  bool _loadingChildren = true;
+  bool _loadingAttendance = false;
+  List<AttendanceRecord> _records = [];
+  String? _error;
 
-  final Map<String, Map<String, Map<String, int>>> attendanceData = {
-    'Bocai Robert': {
-      'Matematica': {'present': 18, 'absent': 4},
-      'Limba Română': {'present': 20, 'absent': 2},
-    },
-    'Ana Maria': {
-      'Istorie': {'present': 19, 'absent': 3},
-      'Biologie': {'present': 21, 'absent': 1},
-    },
-  };
+  @override
+  void initState() {
+    super.initState();
+    _loadChildren();
+  }
 
-  final int notificationCount = 0;
+  Future<void> _loadChildren() async {
+    setState(() {
+      _loadingChildren = true;
+      _error = null;
+    });
+    try {
+      final kids = await TutorService.getChildren();
+      setState(() {
+        _children = kids;
+        _selectedChild = kids.isNotEmpty ? kids.first : null;
+      });
+      if (_selectedChild != null) {
+        await _loadAttendance(_selectedChild!);
+      }
+    } catch (e) {
+      setState(() => _error = 'Error cargando lista de hijos: $e');
+    } finally {
+      setState(() => _loadingChildren = false);
+    }
+  }
+
+  Future<void> _loadAttendance(User child) async {
+    setState(() {
+      _loadingAttendance = true;
+      _error = null;
+      _records = [];
+    });
+    try {
+      // Obtener todos los registros del aula del alumno
+      final recs = await AttendanceService.getRecords(
+        classroomId: child.classroomId!,
+        // opcional: filtrar periodo o fecha si lo deseas
+      );
+      // Filtrar solo los de este alumno
+      setState(() {
+        _records = recs.where((r) => r.userId == child.id).toList();
+      });
+    } catch (e) {
+      setState(() => _error = 'Error cargando asistencias: $e');
+    } finally {
+      setState(() => _loadingAttendance = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final currentChild = children[selectedChildIndex];
-    final childAttendance = attendanceData[currentChild]!;
-
     return TutorScaffold(
       currentIndex: 2,
-      notificationCount: notificationCount,
-      onNotificationTap: () => Navigator.pushNamed(context, TutorNotificationsScreen.routeName),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: DropdownButtonFormField<String>(
-              value: currentChild,
-              items: children.map((name) => 
-                DropdownMenuItem(value: name, child: Text(name))
-              ).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    selectedChildIndex = children.indexOf(value);
-                  });
-                }
-              },
-              decoration: InputDecoration(
-                labelText: 'Selectați copilul',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(16),
-              children: childAttendance.entries.map((subjectEntry) {
-                final subject = subjectEntry.key;
-                final stats = subjectEntry.value;
-                final total = stats['present']! + stats['absent']!;
-                final percentage = stats['present']! / total;
-                
-                return Card(
-                  margin: EdgeInsets.only(bottom: 12),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          subject,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        SizedBox(height: 8),
-                        LinearProgressIndicator(
-                          value: percentage,
-                          backgroundColor: Colors.red[100],
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
-                        ),
-                        SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Prezențe: ${stats['present']}'),
-                            Text('Absențe: ${stats['absent']}'),
-                          ],
-                        ),
-                      ],
+      notificationCount: 0,
+      onNotificationTap: () => Navigator.pushNamed(
+        context,
+        AppRoutes.tutorNotifications,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // 1) Selector de niño/a
+            _loadingChildren
+                ? const CircularProgressIndicator()
+                : DropdownButtonFormField<User>(
+                    value: _selectedChild,
+                    items: _children
+                        .map((u) => DropdownMenuItem(
+                              value: u,
+                              child: Text(u.name),
+                            ))
+                        .toList(),
+                    decoration: const InputDecoration(
+                      labelText: 'Selectați copilul',
+                      border: OutlineInputBorder(),
                     ),
+                    onChanged: (u) {
+                      if (u != null) {
+                        setState(() => _selectedChild = u);
+                        _loadAttendance(u);
+                      }
+                    },
                   ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
+            const SizedBox(height: 16),
+
+            // 2) Carga de asistencias
+            if (_loadingAttendance)
+              const Expanded(child: Center(child: CircularProgressIndicator()))
+            else if (_error != null)
+              Expanded(child: Center(child: Text(_error!)))
+            else if (_records.isEmpty)
+              const Expanded(child: Center(child: Text('Nu există date de prezență.')))
+            else
+              // 3) Listado de registros
+              Expanded(
+                child: ListView.separated(
+                  itemCount: _records.length,
+                  separatorBuilder: (_, __) => const Divider(),
+                  itemBuilder: (context, i) {
+                    final rec = _records[i];
+                    return ListTile(
+                      title: Text(
+                        '${rec.status == 'PRESENT' ? '✓' : '✗'} '
+                        '${rec.date.toIso8601String().split('T').first}',
+                      ),
+                      subtitle: Text('Periodă: ${rec.period}'),
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
