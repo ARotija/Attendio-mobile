@@ -1,70 +1,97 @@
+// lib/screens/teacher/notes.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
+import 'package:attendio_mobile/services/classroom_service.dart';
+import 'package:attendio_mobile/models/classroom.dart';
+import 'package:attendio_mobile/widgets/scaffolds/teacher_scaffold.dart';
+import 'package:attendio_mobile/routes.dart';
 
 class TeacherNotesScreen extends StatefulWidget {
-  static const routeName = '/teacher/notes';
-  @override _TeacherNotesScreenState createState() => _TeacherNotesScreenState();
+  static const routeName = AppRoutes.teacherNotes;
+
+  const TeacherNotesScreen({super.key});
+
+  @override
+  State<TeacherNotesScreen> createState() => _TeacherNotesScreenState();
 }
 
 class _TeacherNotesScreenState extends State<TeacherNotesScreen> {
-  String selectedClass = '9A';
-  String selectedStudent = 'Juan Pérez';
-
-  // Datos dummy
-  final classes = ['9A','10B','11C'];
-  final students = ['Juan Pérez','Ana García','Luis Martínez'];
-  final Map<String,List<String>> notesBySubject = {
-    'Matemáticas': [],
-    'Historia': ['7 (01/05)','9 (15/04)'],
-    'Ciencias': ['8 (20/03)'],
-  };
+  late Future<List<Classroom>> _futureClasses;
+  String _search = '';
 
   @override
-  Widget build(BuildContext ctx) {
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'teacher', currentRoute: TeacherNotesScreen.routeName),
-      appBar: AppBar(title: Text('Notas')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(children: [
-              Expanded(child: DropdownButtonFormField(
-                decoration: InputDecoration(labelText: 'Clase'),
-                value: selectedClass,
-                items: classes.map((c)=>DropdownMenuItem(value: c, child: Text(c))).toList(),
-                onChanged: (v){ setState(()=> selectedClass = v!); },
-              )),
-              SizedBox(width: 16),
-              Expanded(child: DropdownButtonFormField(
-                decoration: InputDecoration(labelText: 'Alumno'),
-                value: selectedStudent,
-                items: students.map((s)=>DropdownMenuItem(value: s, child: Text(s))).toList(),
-                onChanged: (v){ setState(()=> selectedStudent = v!); },
-              )),
-            ]),
-            SizedBox(height: 24),
-            Expanded(
-              child: ListView(
-                children: notesBySubject.entries.map((entry){
-                  return ListTile(
-                    title: Text(entry.key),
-                    subtitle: entry.value.isEmpty
-                      ? Text('Sin notas')
-                      : Wrap(
-                          spacing: 8,
-                          children: entry.value.map((n)=>Chip(label: Text(n))).toList(),
-                        ),
-                    trailing: Icon(Icons.edit),
-                    onTap: () {
-                      // Aquí muestra modal para agregar/eliminar
-                    },
-                  );
-                }).toList(),
+  void initState() {
+    super.initState();
+    _futureClasses = ClassroomService.getClassrooms();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TeacherScaffold(
+      currentIndex: 1,
+      title: 'Note elevilor',
+      body: Column(
+        children: [
+          // campo de búsqueda
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              onChanged: (v) => setState(() => _search = v.trim().toLowerCase()),
+              decoration: InputDecoration(
+                hintText: 'Caută clasă...',
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
               ),
             ),
-          ],
-        ),
+          ),
+
+          // lista de aulas
+          Expanded(
+            child: FutureBuilder<List<Classroom>>(
+              future: _futureClasses,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snap.hasError) {
+                  return Center(child: Text('Eroare: ${snap.error}'));
+                }
+                var classes = snap.data!
+                    .where((c) => c.name.toLowerCase().contains(_search))
+                    .toList();
+                if (classes.isEmpty) {
+                  return const Center(child: Text('Nicio clasă găsită.'));
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  itemCount: classes.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, i) {
+                    final cls = classes[i];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: ListTile(
+                        leading: CircleAvatar(child: Text(cls.name[0])),
+                        title: Text('Clasa ${cls.name}'),
+                        subtitle: Text('ID: ${cls.id}'),
+                        trailing: const Icon(Icons.arrow_forward),
+                        onTap: () {
+                          // Aquí deberías navegar a la pantalla de detalle de notas
+                          // pasándole cls.id como argumento.
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.teacherNotes + '/class/${cls.id}',
+                            arguments: {'classroom_id': cls.id},
+                          );
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

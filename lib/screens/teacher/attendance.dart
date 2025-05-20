@@ -1,64 +1,137 @@
+// lib/screens/teacher/attendance.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
+import 'package:attendio_mobile/widgets/scaffolds/teacher_scaffold.dart';
+import 'package:attendio_mobile/services/attendance_service.dart';
+import 'package:attendio_mobile/models/attendance_record.dart';
+import 'package:attendio_mobile/routes.dart';
 
 class TeacherAttendanceScreen extends StatefulWidget {
-  static const routeName = '/teacher/attendance';
-  @override _TeacherAttendanceScreenState createState() => _TeacherAttendanceScreenState();
+  static const routeName = AppRoutes.teacherAttendance;
+
+  const TeacherAttendanceScreen({super.key});
+
+  @override
+  State<TeacherAttendanceScreen> createState() => _TeacherAttendanceScreenState();
 }
 
 class _TeacherAttendanceScreenState extends State<TeacherAttendanceScreen> {
-  String selectedClass = '9A';
+  late final int classroomId;
   int selectedPeriod = 1;
-
-  final classes = ['9A','10B','11C'];
-  final periods = [1,2,3,4,5,6];
-
-  // Dummy: quién está presente y ausente
-  final present = ['Juan Pérez','Ana García'];
-  final absent  = ['Luis Martínez'];
+  DateTime selectedDate = DateTime.now();
 
   @override
-  Widget build(BuildContext ctx) {
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'teacher', currentRoute: TeacherAttendanceScreen.routeName),
-      appBar: AppBar(title: Text('Asistencias')),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(children: [
-          Row(children: [
-            Expanded(child: DropdownButtonFormField(
-              decoration: InputDecoration(labelText: 'Clase'),
-              value: selectedClass,
-              items: classes.map((c)=>DropdownMenuItem(value:c,child:Text(c))).toList(),
-              onChanged:(v)=> setState(()=>selectedClass=v!),
-            )),
-            SizedBox(width:16),
-            Expanded(child: DropdownButtonFormField<int>(
-              decoration: InputDecoration(labelText: 'Período'),
-              value: selectedPeriod,
-              items: periods.map((p)=>DropdownMenuItem(value:p,child:Text('Hora $p'))).toList(),
-              onChanged:(v)=> setState(()=>selectedPeriod=v!),
-            )),
-          ]),
-          SizedBox(height:24),
-          Expanded(
-            child: ListView(
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+    classroomId = args != null && args['classroom_id'] != null
+        ? args['classroom_id'] as int
+        : 0;
+  }
+
+  Future<List<AttendanceRecord>> _loadRecords() {
+      // Convertimos la fecha a "YYYY-MM-DD"
+      final dateStr = selectedDate.toIso8601String().split('T').first;
+      return AttendanceService.getRecords(
+        classroomId: classroomId,
+        period: selectedPeriod,
+        date: dateStr,
+      );
+  }
+
+  Future<void> _onScanPressed() async {
+    // Navegar a la pantalla de escaneo pasando los mismos parámetros
+    Navigator.pushNamed(
+      context,
+      AppRoutes.teacherScan,
+      arguments: {
+        'classroom_id': classroomId,
+        'period': selectedPeriod,
+      },
+    ).then((_) {
+      // Al volver del scan, recarga los registros
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TeacherScaffold(
+      currentIndex: 2,
+      title: 'Prezențe',
+      body: Column(
+        children: [
+          // Filtros: fecha y periodo, y botón de nuevo scan
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
               children: [
-                Text('Presentes', style: Theme.of(ctx).textTheme.titleMedium),
-                ...present.map((s)=>ListTile(
-                  leading: Icon(Icons.check, color: Colors.green),
-                  title: Text(s),
-                )),
-                Divider(),
-                Text('Ausentes', style: Theme.of(ctx).textTheme.titleMedium),
-                ...absent.map((s)=>ListTile(
-                  leading: Icon(Icons.close, color: Colors.red),
-                  title: Text(s),
-                )),
+                // Selector de periodo
+                DropdownButton<int>(
+                  value: selectedPeriod,
+                  items: List.generate(
+                    6,
+                    (i) => DropdownMenuItem(
+                      value: i + 1,
+                      child: Text('Perioada ${i + 1}'),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    if (val != null) setState(() => selectedPeriod = val);
+                  },
+                ),
+                const Spacer(),
+                ElevatedButton.icon(
+                  icon: const Icon(Icons.fingerprint),
+                  label: const Text('Scan nou'),
+                  onPressed: _onScanPressed,
+                ),
               ],
             ),
           ),
-        ]),
+
+          // Lista de registros
+          Expanded(
+            child: FutureBuilder<List<AttendanceRecord>>(
+              future: _loadRecords(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Eroare: ${snapshot.error}'));
+                }
+                final records = snapshot.data!;
+                if (records.isEmpty) {
+                  return const Center(child: Text('Nu există date de prezență.'));
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: records.length,
+                  separatorBuilder: (_, __) => const Divider(),
+                  itemBuilder: (context, i) {
+                    final rec = records[i];
+                    return ListTile(
+                      title: Text('User #${rec.userId}'),
+                      subtitle: Text(
+                        '${rec.status} — ${rec.date.toIso8601String().split("T").first}',
+                      ),
+                      trailing: Text(
+                        rec.status == AttendanceStatus.present ? '✓' : '✗',
+                        style: TextStyle(
+                          color: rec.status == AttendanceStatus.present
+                              ? Colors.green
+                              : Colors.red,
+                          fontSize: 18,
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,9 @@
+// lib/screens/teacher/search.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
+import 'package:attendio_mobile/services/classroom_service.dart';
+import '../../widgets/scaffolds/teacher_scaffold.dart';
+import 'package:attendio_mobile/models/classroom.dart';
 
 class TeacherSearchScreen extends StatefulWidget {
   static const routeName = '/teacher/search';
@@ -9,65 +13,79 @@ class TeacherSearchScreen extends StatefulWidget {
 }
 
 class _TeacherSearchScreenState extends State<TeacherSearchScreen> {
-  final _searchController = TextEditingController();
-  String selectedClass = '9A';
-  final List<String> classes = ['9A', '10B', '11C'];
+  List<Classroom> _classes = [];
+  String? selectedClass;
+  bool _loading = true;
+  String? _error;
 
-  List<Map<String, String>> searchResults = [];
+  @override
+  void initState() {
+    super.initState();
+    _loadClasses();
+  }
 
-  void _performSearch() {
+  Future<void> _loadClasses() async {
     setState(() {
-      searchResults = [
-        { 'student': 'Juan Pérez', 'subject': 'Historia', 'status': 'Ausente' },
-        { 'student': 'Ana García', 'subject': 'Ciencias', 'status': 'Presente' },
-      ];
+      _loading = true;
+      _error = null;
     });
+    try {
+      _classes = await ClassroomService.getClassrooms();
+    } catch (e) {
+      _error = 'Eroare la încărcarea sălilor: $e';
+    } finally {
+      setState(() => _loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'teacher', currentRoute: TeacherSearchScreen.routeName),
-      appBar: AppBar(title: Text('Buscar')),
+    return TeacherScaffold(
+      currentIndex: 3,
+      title: 'Căutare',
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(children: [
-          DropdownButtonFormField<String>(
-            value: selectedClass,
-            items: classes
-                .map((c) => DropdownMenuItem(value: c, child: Text(c)))
-                .toList(),
-            onChanged: (v) => setState(() => selectedClass = v!),
-            decoration: InputDecoration(labelText: 'Seleccionar clase'),
-          ),
-          SizedBox(height: 16),
-          Row(children: [
-            Expanded(
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(labelText: 'Buscar estudiante'),
-              ),
-            ),
-            IconButton(
-              icon: Icon(Icons.search),
-              onPressed: _performSearch,
-            ),
-          ]),
-          SizedBox(height: 24),
-          Expanded(
-            child: ListView.builder(
-              itemCount: searchResults.length,
-              itemBuilder: (_, i) {
-                final result = searchResults[i];
-                return ListTile(
-                  leading: Icon(Icons.person),
-                  title: Text(result['student']!),
-                  subtitle: Text('${result['subject']} · ${result['status']}'),
-                );
-              },
-            ),
-          ),
-        ]),
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(child: Text(_error!))
+                : Column(
+                    children: [
+                      DropdownButtonFormField<String>(
+                        value: selectedClass,
+                        items: _classes.map((cls) {
+                          // Usamos el nombre real de la classroom
+                          return DropdownMenuItem(
+                            value: cls.name,
+                            child: Text(cls.name),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            selectedClass = value;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Selectează sala',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: selectedClass == null
+                            ? null
+                            : () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text('Căutare pentru: $selectedClass')),
+                                );
+                              },
+                        icon: const Icon(Icons.search),
+                        label: const Text('Caută'),
+                      ),
+                    ],
+                  ),
       ),
     );
   }

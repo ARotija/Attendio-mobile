@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // <-- Importa dotenv
 import 'theme.dart';
 import 'routes.dart';
 
-void main() {
-  runApp(EduNetApp());
+Future<void> main() async {
+  // Cargar variables de entorno desde el archivo .env
+  await dotenv.load(fileName: ".env");
+
+  runApp(const MyApp()); // Inicia la app después de cargar el archivo .env
 }
 
-class EduNetApp extends StatelessWidget {
-  const EduNetApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'EduNet',
+      title: 'Attendio',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
-      initialRoute: '/login',
-      routes: appRoutes,
+      initialRoute: AppRoutes.login, // La ruta inicial debe ser la de login
+      routes: appRoutes, // Las rutas de tu aplicación
     );
   }
 }

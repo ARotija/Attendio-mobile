@@ -1,117 +1,166 @@
+// lib/screens/tutor/notes.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
-import '../../widgets/notification_bell.dart';
-import 'notifications.dart';
+import 'package:attendio_mobile/widgets/scaffolds/tutor_scaffold.dart';
+import 'package:attendio_mobile/services/tutor_service.dart';
+import 'package:attendio_mobile/services/note_service.dart';
+import 'package:attendio_mobile/models/user.dart';
+import 'package:attendio_mobile/models/note.dart';
+import 'package:attendio_mobile/routes.dart';
 
 class TutorNotesScreen extends StatefulWidget {
-  static const routeName = '/tutor/notes';
+  static const routeName = AppRoutes.tutorNotes;
 
-  // Dummy children list
-  final List<String> children = ['María López', 'Carlos Díaz'];
-
-  // Dummy notes per child per subject
-  final Map<String, Map<String, List<Map<String, String>>>> notes = {
-    'María López': {
-      'Matemáticas': [
-        {'value': '7', 'date': '02/05/2025'},
-        {'value': '8', 'date': '15/04/2025'},
-      ],
-      'Lengua': [],
-    },
-    'Carlos Díaz': {
-      'Historia': [
-        {'value': '9', 'date': '01/05/2025'},
-      ],
-      'Ciencias': [],
-    },
-  };
-
-  final int newNotificationsCount = 1;
+  const TutorNotesScreen({super.key});
 
   @override
   _TutorNotesScreenState createState() => _TutorNotesScreenState();
 }
 
 class _TutorNotesScreenState extends State<TutorNotesScreen> {
-  int selectedChildIndex = 0;
+  bool _loading = true;
+  String? _error;
+
+  List<User> _children = [];
+  int _selectedChildIndex = 0;
+  List<Note> _notes = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChildrenAndNotes();
+  }
+
+  Future<void> _loadChildrenAndNotes() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      // 1️⃣ Cargo los hijos del tutor
+      _children = await TutorService.getChildren();
+      if (_children.isEmpty) {
+        setState(() {
+          _loading = false;
+          _notes = [];
+        });
+        return;
+      }
+      // 2️⃣ Cargo las notas del primer hijo
+      await _loadNotesForChild(_children[_selectedChildIndex].id);
+    } catch (e) {
+      setState(() => _error = 'Error cargando datos: $e');
+    } finally {
+      setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadNotesForChild(int studentId) async {
+    try {
+      final notes = await NoteService.getNotesByStudent(studentId);
+      setState(() => _notes = notes);
+    } catch (e) {
+      setState(() => _error = 'Error al obtener notas: $e');
+    }
+  }
+
+  double _calculateAverage(List<Note> notes) {
+    if (notes.isEmpty) return 0;
+    final sum = notes.map((n) => n.value).reduce((a, b) => a + b);
+    return sum / notes.length;
+  }
+
+  /// Agrupa las notas por courseName
+  Map<String, List<Note>> _groupByCourse(List<Note> notes) {
+    final map = <String, List<Note>>{};
+    for (var note in notes) {
+      map.putIfAbsent(note.courseName, () => []).add(note);
+    }
+    return map;
+  }
 
   @override
   Widget build(BuildContext context) {
-    String currentChild = widget.children[selectedChildIndex];
-    final childNotes = widget.notes[currentChild]!;
-
-    double average(List<Map<String, String>> list) {
-      if (list.isEmpty) return 0.0;
-      return list.map((e) => double.parse(e['value']!)).reduce((a, b) => a + b) / list.length;
-    }
-
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'tutor', currentRoute: TutorNotesScreen.routeName),
-      appBar: AppBar(
-        title: Text('Notas de $currentChild'),
-        actions: [
-          NotificationBell(
-            count: widget.newNotificationsCount,
-            onTap: () => Navigator.of(context).pushNamed(TutorNotificationsScreen.routeName),
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Selector de hijo
-          Padding(
-            padding: EdgeInsets.all(16),
-            child: DropdownButton<String>(
-              value: currentChild,
-              items: widget.children
-                  .map((name) => DropdownMenuItem(value: name, child: Text(name)))
-                  .toList(),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    selectedChildIndex = widget.children.indexOf(val);
-                  });
-                }
-              },
-            ),
-          ),
-          Expanded(
-            child: ListView(
-              padding: EdgeInsets.all(16),
-              children: childNotes.entries.map((entry) {
-                final subject = entry.key;
-                final list = entry.value;
-                final avg = average(list);
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8),
-                  child: ListTile(
-                    title: Text(subject),
-                    subtitle: list.isEmpty
-                        ? Text('Sin notas')
-                        : Wrap(
-                            spacing: 6,
-                            children: list
-                                .map((n) => Chip(label: Text('${n['value']} (${n['date']})')))
-                                .toList(),
-                          ),
-                    trailing: Container(
-                      padding: EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: avg > 0 ? Theme.of(context).colorScheme.secondary : Colors.grey,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        avg > 0 ? avg.toStringAsFixed(1) : '-',
-                        style: TextStyle(color: Colors.white),
+    return TutorScaffold(
+      currentIndex: 1,
+      notificationCount: 0,
+      onNotificationTap: () => Navigator.pushNamed(context, AppRoutes.tutorNotifications),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : _error != null
+              ? Center(child: Text(_error!))
+              : Column(
+                  children: [
+                    // Selector de hijo
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: DropdownButtonFormField<int>(
+                        value: _children.isNotEmpty ? _children[_selectedChildIndex].id : null,
+                        decoration: const InputDecoration(
+                          labelText: 'Selectați copilul',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: _children.map((child) {
+                          return DropdownMenuItem<int>(
+                            value: child.id,
+                            child: Text(child.name),
+                          );
+                        }).toList(),
+                        onChanged: (studentId) {
+                          if (studentId == null) return;
+                          final newIndex = _children.indexWhere((c) => c.id == studentId);
+                          if (newIndex != -1) {
+                            setState(() {
+                              _selectedChildIndex = newIndex;
+                              _loading = true;
+                            });
+                            _loadNotesForChild(studentId).whenComplete(() {
+                              setState(() => _loading = false);
+                            });
+                          }
+                        },
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
+
+                    // Lista de notas por curso
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: _groupByCourse(_notes).entries.map((entry) {
+                          final courseName = entry.key;
+                          final courseNotes = entry.value;
+                          final avg = _calculateAverage(courseNotes);
+
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            child: ExpansionTile(
+                              title: Text(courseName),
+                              subtitle: courseNotes.isEmpty
+                                  ? const Text('Nu există note')
+                                  : Text('Medie: ${avg.toStringAsFixed(2)}'),
+                              children: courseNotes.map((note) {
+                                return ListTile(
+                                  leading: CircleAvatar(
+                                    backgroundColor:
+                                        Theme.of(context).primaryColor.withOpacity(0.2),
+                                    child: Text(
+                                      note.value.toString(),
+                                      style: TextStyle(color: Theme.of(context).primaryColor),
+                                    ),
+                                  ),
+                                  title: Text(note.description ?? ''),
+                                  subtitle: Text(
+                                    note.date.toIso8601String().split('T').first,
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
     );
   }
 }

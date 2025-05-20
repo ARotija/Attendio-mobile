@@ -1,78 +1,85 @@
+// lib/screens/student/attendance.dart
+
 import 'package:flutter/material.dart';
-import '../../widgets/sidebar_drawer.dart';
-import '../../widgets/notification_bell.dart';
-import 'notifications.dart';
+import 'package:attendio_mobile/services/user_service.dart';
+import 'package:attendio_mobile/services/attendance_service.dart';
+import 'package:attendio_mobile/models/attendance_record.dart';
+import 'package:attendio_mobile/widgets/scaffolds/student_scaffold.dart';
+import 'package:attendio_mobile/routes.dart';
 
-class StudentAttendanceScreen extends StatelessWidget {
-  static const routeName = '/student/attendance';
+class StudentAttendanceScreen extends StatefulWidget {
+  static const routeName = AppRoutes.studentAttendance;
 
-  // Dummy attendance stats per subject
-  final Map<String, Map<String, int>> attendance = {
-    'Matemáticas': { 'present': 20, 'absent': 2 },
-    'Lengua':       { 'present': 22, 'absent': 0 },
-    'Ciencias':     { 'present': 19, 'absent': 3 },
-  };
+  const StudentAttendanceScreen({super.key});
 
-  int get totalPresent =>
-      attendance.values.map((e) => e['present']!).reduce((a, b) => a + b);
-  int get totalAbsent =>
-      attendance.values.map((e) => e['absent']!).reduce((a, b) => a + b);
+  @override
+  State<StudentAttendanceScreen> createState() => _StudentAttendanceScreenState();
+}
 
-  final int newNotificationsCount = 1;
+class _StudentAttendanceScreenState extends State<StudentAttendanceScreen> {
+  late Future<List<AttendanceRecord>> _futureAbsences;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureAbsences = _loadAbsences();
+  }
+
+  Future<List<AttendanceRecord>> _loadAbsences() async {
+    // 1️⃣ Primero, obtén el perfil para tener classroom_id
+    final me = await UserService.getMe();
+    final classroomId = me.classroomId;
+    // 2️⃣ Luego, pide todos los registros de asistencia
+    final allRecords = await AttendanceService.getRecords(
+      classroomId: classroomId,
+      // opcional: period: null, date: null
+    );
+    // 3️⃣ Filtra solo los ausentes
+    return allRecords.where((r) => r.status == 'ABSENT').toList();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: SidebarDrawer(role: 'student', currentRoute: routeName),
-      appBar: AppBar(
-        title: Text('Mis Ausencias'),
-        actions: [
-          NotificationBell(
-            count: newNotificationsCount,
-            onTap: () =>
-                Navigator.of(context).pushNamed(StudentNotificationsScreen.routeName),
-          ),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Total Ausencias:', style: Theme.of(context).textTheme.titleMedium),
-            Text('Presente: $totalPresent'),
-            Text('Ausente:  $totalAbsent'),
-            Divider(height: 32),
-            Expanded(
-              child: ListView(
-                children: attendance.entries.map((e) {
-                  final subj = e.key;
-                  final p = e.value['present']!;
-                  final a = e.value['absent']!;
-                  return Card(
-                    margin: EdgeInsets.symmetric(vertical: 6),
-                    child: ListTile(
-                      title: Text(subj),
-                      subtitle: Text('Presente: $p · Ausente: $a'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.check, color: Colors.green),
-                          SizedBox(width: 4),
-                          Text('$p'),
-                          SizedBox(width: 16),
-                          Icon(Icons.close, color: Colors.red),
-                          SizedBox(width: 4),
-                          Text('$a'),
-                        ],
-                      ),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ],
-        ),
+    return StudentScaffold(
+      currentIndex: 2,
+      notificationCount: 0,
+      onNotificationTap: () => Navigator.pushNamed(
+          context, AppRoutes.studentNotifications),
+      body: FutureBuilder<List<AttendanceRecord>>(
+        future: _futureAbsences,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Eroare: ${snapshot.error}'));
+          }
+          final absences = snapshot.data!;
+          if (absences.isEmpty) {
+            return const Center(child: Text('Nu există absențe.'));
+          }
+          // 4️⃣ Renderiza la lista de absențe
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: absences.length,
+            separatorBuilder: (_, __) => const Divider(),
+            itemBuilder: (context, i) {
+              final rec = absences[i];
+              return ListTile(
+                leading: const Icon(Icons.event_busy, color: Colors.red),
+                title: Text(
+                  rec.date.toIso8601String().split('T').first,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text('Perioada ${rec.period}'),
+                trailing: const Text(
+                  'Absent',
+                  style: TextStyle(color: Colors.red),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }
